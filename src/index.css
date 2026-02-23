@@ -1,0 +1,189 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 160 84% 39%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 158 64% 52%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 158 64% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.editorial-editor .ProseMirror {
+  min-height: 300px;
+  color: #e2e8f0;
+  outline: none;
+  line-height: 1.75;
+}
+
+.editorial-editor .ProseMirror h2,
+.editorial-content h2 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-top: 1.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.editorial-editor .ProseMirror h3,
+.editorial-content h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 1.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.editorial-editor .ProseMirror h4,
+.editorial-content h4 {
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-top: 1.1rem;
+  margin-bottom: 0.55rem;
+}
+
+.editorial-editor .ProseMirror p,
+.editorial-content p {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.editorial-editor .ProseMirror ul,
+.editorial-editor .ProseMirror ol,
+.editorial-content ul,
+.editorial-content ol {
+  margin: 0.7rem 0 0.9rem 1.2rem;
+}
+
+.editorial-editor .ProseMirror blockquote,
+.editorial-content blockquote {
+  border-left: 4px solid #3b82f6;
+  background: #f8fafc;
+  color: #1e293b;
+  padding: 0.9rem 1rem;
+  border-radius: 0 0.6rem 0.6rem 0;
+  margin: 1rem 0;
+}
+
+.editorial-callout {
+  margin: 1rem 0;
+  padding: 0.95rem 1rem;
+  border-radius: 0.75rem;
+  border-left: 4px solid;
+}
+
+.editorial-callout-summary {
+  border-color: #64748b;
+  background: #f1f5f9;
+}
+
+.editorial-callout-warning {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.editorial-inline-image {
+  border-radius: 0.9rem;
+  border: 1px solid #cbd5e1;
+  margin: 1rem 0;
+}
+
+.editorial-inline-image-full {
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+}
+
+.editorial-inline-image-center {
+  width: min(100%, 680px);
+  max-height: 460px;
+  object-fit: cover;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.editorial-content hr,
+.editorial-editor .ProseMirror hr {
+  margin: 1.4rem 0;
+  border: 0;
+  border-top: 1px solid #cbd5e1;
+}

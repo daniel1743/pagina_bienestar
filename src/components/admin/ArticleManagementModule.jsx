@@ -1,0 +1,579 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/lib/customSupabaseClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import {
+  getArticleMetaStore,
+  getMediaLibrary,
+  logAdminAction,
+  saveArticleMetaStore,
+  saveMediaLibrary,
+} from '@/lib/adminConfig';
+import { refreshSitemapAfterPublish } from '@/lib/sitemapRefresh';
+import { LOCAL_PUBLISHED_ARTICLES } from '@/content/localPublishedArticles';
+import EditorialUnderline from '@/components/admin/editorExtensions/EditorialUnderline';
+import EditorialColor from '@/components/admin/editorExtensions/EditorialColor';
+import EditorialCallout from '@/components/admin/editorExtensions/EditorialCallout';
+import EditorialImage from '@/components/admin/editorExtensions/EditorialImage';
+import {
+  AlertTriangle,
+  Bold,
+  CheckSquare,
+  Code2,
+  Copy,
+  Eye,
+  Heading2,
+  Heading3,
+  Heading4,
+  ImagePlus,
+  Italic,
+  Link2,
+  Link2Off,
+  List,
+  ListChecks,
+  ListOrdered,
+  Minus,
+  Palette,
+  Plus,
+  Quote,
+  Save,
+  Search,
+  Strikethrough,
+  Table2,
+  Trash2,
+  Underline,
+} from 'lucide-react';
+
+const STATUS = ['draft', 'review', 'scheduled', 'published'];
+const CATEGORIES = ['General', 'Hígado', 'Digestión', 'Metabolismo', 'Inflamación', 'Nutrición'];
+const COLORS = ['#1d4ed8', '#334155'];
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 300 * 1024;
+const MAX_IMAGE_WIDTH = 1600;
+const IMAGE_QUALITY_START = 0.8;
+const IMAGE_QUALITY_MIN = 0.6;
+const WEBP_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*\.webp$/;
+
+const emptyForm = {
+  id: null, title: '', subtitle: '', slug: '', category: 'General', tags: '', status: 'draft',
+  scheduledAt: '', authorName: '', authorBio: '', featuredImage: '', videoEmbed: '',
+  externalLinks: [''], metaTitle: '', metaDescription: '', focusKeyword: '', secondaryKeywords: '',
+  canonical: '', noIndex: false, content: '<p>Escribe tu contenido...</p>',
+};
+
+const slugify = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+const normalizeStatus = (value) => (['published', 'publicado'].includes((value || '').toLowerCase()) ? 'published' : ['scheduled', 'programado'].includes((value || '').toLowerCase()) ? 'scheduled' : ['review', 'en_revision', 'revision'].includes((value || '').toLowerCase()) ? 'review' : 'draft');
+const normalizeHtml = (html) => (html || '').replace(/<h1(\s[^>]*)?>/gi, '<h2$1>').replace(/<\/h1>/gi, '</h2>');
+const safeRead = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) ?? fallback : fallback; } catch { return fallback; } };
+const safeWrite = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+const toDataUrl = (file) => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result || '')); r.onerror = () => reject(new Error('No se pudo leer la imagen.')); r.readAsDataURL(file); });
+const fileToBase64 = async (file) => {
+  const dataUrl = await toDataUrl(file);
+  const parts = dataUrl.split(',');
+  return parts[1] || '';
+};
+const base64ToBlob = (base64, mime = 'image/webp') => {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+};
+const countImages = (node) => !node ? 0 : (node.type === 'image' ? 1 : 0) + (Array.isArray(node.content) ? node.content.reduce((a, b) => a + countImages(b), 0) : 0);
+const btn = (active = false) => `h-9 min-w-9 px-2 inline-flex items-center justify-center rounded-md border transition ${active ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'}`;
+const escapeHtml = (value) => String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+const seoWebpName = (raw) => `${slugify((raw || '').replace(/\.[^/.]+$/, '')) || 'imagen-editorial'}.webp`;
+const canvasToWebpBlob = (canvas, quality) =>
+  new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error('No se pudo generar imagen WebP.'));
+          return;
+        }
+        resolve(blob);
+      },
+      'image/webp',
+      quality,
+    );
+  });
+const loadImageElement = (file) =>
+  new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('No se pudo procesar el archivo de imagen.'));
+    };
+    image.src = url;
+  });
+const optimizeToEditorialWebp = async (file) => {
+  if (!file?.type || !file.type.startsWith('image/')) {
+    throw new Error('Archivo inválido: solo se permiten imágenes.');
+  }
+
+  const image = await loadImageElement(file);
+  const sourceWidth = image.naturalWidth || image.width || 0;
+  const sourceHeight = image.naturalHeight || image.height || 0;
+  if (!sourceWidth || !sourceHeight) {
+    throw new Error('No se pudieron leer dimensiones de la imagen.');
+  }
+
+  const targetWidth = Math.min(sourceWidth, MAX_IMAGE_WIDTH);
+  const targetHeight = Math.round((sourceHeight / sourceWidth) * targetWidth);
+  const canvas = document.createElement('canvas');
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('No se pudo inicializar compresión de imagen.');
+  }
+  context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+  let quality = IMAGE_QUALITY_START;
+  let usedQuality = quality;
+  let blob = null;
+  while (quality >= IMAGE_QUALITY_MIN) {
+    // Compresión progresiva: 80% -> 60%
+    blob = await canvasToWebpBlob(canvas, quality);
+    usedQuality = quality;
+    if (blob.size <= MAX_IMAGE_BYTES) break;
+    quality -= 0.05;
+  }
+
+  if (!blob || blob.size > MAX_IMAGE_BYTES || usedQuality < IMAGE_QUALITY_MIN) {
+    throw new Error('No se pudo comprimir la imagen debajo de 300KB (mínimo 60% de calidad).');
+  }
+
+  return { blob, width: targetWidth, height: targetHeight, quality: Number(usedQuality.toFixed(2)) };
+};
+
+const optimizeToWebpWithEdgeFunction = async (file) => {
+  const functionName = import.meta.env.VITE_IMAGE_OPTIMIZER_FUNCTION_NAME;
+  if (!functionName) return null;
+  const imageBase64 = await fileToBase64(file);
+  const payload = {
+    imageBase64,
+    fileName: file.name,
+    fileType: file.type,
+    maxBytes: MAX_IMAGE_BYTES,
+    maxWidth: MAX_IMAGE_WIDTH,
+    qualityStart: Math.round(IMAGE_QUALITY_START * 100),
+    qualityMin: Math.round(IMAGE_QUALITY_MIN * 100),
+  };
+  const { data, error } = await supabase.functions.invoke(functionName, { body: payload });
+  if (error) throw new Error(error.message || 'Falló la optimización en servidor.');
+  if (!data?.base64) throw new Error('Respuesta inválida desde optimizador de servidor.');
+  const blob = base64ToBlob(data.base64, data.contentType || 'image/webp');
+  if (blob.size > MAX_IMAGE_BYTES) {
+    throw new Error('El servidor devolvió una imagen mayor a 300KB.');
+  }
+  const optimizedFile = new File([blob], data.fileName || seoWebpName(file.name), {
+    type: data.contentType || 'image/webp',
+    lastModified: Date.now(),
+  });
+  return {
+    file: optimizedFile,
+    bytes: blob.size,
+    width: Number(data.width || 0),
+    height: Number(data.height || 0),
+    quality: Number(data.quality || IMAGE_QUALITY_START),
+    mode: 'server',
+  };
+};
+
+const ArticleManagementModule = () => {
+  const { toast } = useToast();
+  const [articles, setArticles] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  const [form, setForm] = useState({ ...emptyForm });
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [showPreview, setShowPreview] = useState(false);
+  const [mediaLibrary, setMediaLibrary] = useState(getMediaLibrary());
+  const [autosaveInfo, setAutosaveInfo] = useState('Sin cambios');
+  const [linkDraft, setLinkDraft] = useState({ url: '', newTab: false });
+  const [internalFile, setInternalFile] = useState(null);
+  const [internalPreview, setInternalPreview] = useState('');
+  const [internalAlt, setInternalAlt] = useState('');
+  const [internalCaption, setInternalCaption] = useState('');
+  const [internalDisplay, setInternalDisplay] = useState('full');
+  const [isOptimizingInternalImage, setIsOptimizingInternalImage] = useState(false);
+  const [optimizedInternalInfo, setOptimizedInternalInfo] = useState(null);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({ heading: { levels: [2, 3, 4] } }),
+      Link.configure({ autolink: true, openOnClick: false, linkOnPaste: true }),
+      EditorialUnderline, EditorialColor, EditorialCallout, EditorialImage,
+      Table.configure({ resizable: true }), TableRow, TableCell, TableHeader,
+    ],
+    content: form.content,
+    onUpdate: ({ editor: ed }) => setForm((p) => ({ ...p, content: ed.getHTML() })),
+  });
+
+  const loadData = async () => {
+    const meta = getArticleMetaStore();
+    const [{ data: rows }, { data: profiles }] = await Promise.all([
+      supabase.from('articles').select('*').order('created_at', { ascending: false }),
+      supabase.from('user_profiles').select('user_id,name,bio').order('created_at', { ascending: false }),
+    ]);
+    const remote = (rows || []).map((a) => {
+      const m = meta[String(a.id)] || {};
+      return { ...emptyForm, ...m, id: a.id, title: a.title || '', subtitle: m.subtitle ?? a.excerpt ?? '', slug: a.slug || '', category: m.category ?? a.category ?? 'General', status: normalizeStatus(m.status || a.status), authorName: m.authorName || a.author || '', featuredImage: m.featuredImage || a.image_url || '', content: m.content || a.content || '<p>Sin contenido</p>' };
+    });
+    const dbSlugs = new Set(remote.map((a) => a.slug));
+    const local = LOCAL_PUBLISHED_ARTICLES.filter((a) => !dbSlugs.has(a.slug)).map((a) => ({ ...emptyForm, id: a.id, title: a.title, subtitle: a.excerpt, slug: a.slug, category: a.category || 'General', status: 'published', authorName: a.author || 'Equipo editorial', featuredImage: a.image_url || '', content: a.content || '<p>Sin contenido</p>', localOnly: true }));
+    setArticles([...local, ...remote]);
+    setAuthors((profiles || []).map((p) => ({ id: p.user_id, name: p.name || 'Autor', bio: p.bio || '' })));
+  };
+
+  useEffect(() => { loadData(); }, []);
+  useEffect(() => { if (editor && editor.getHTML() !== form.content) editor.commands.setContent(form.content || '<p></p>', false); }, [editor, form.id, form.content]);
+  useEffect(() => { if (!form.slug && form.title) setForm((p) => ({ ...p, slug: slugify(p.title) })); }, [form.title, form.slug]);
+  useEffect(() => { if (!form.title && !form.content) return; setAutosaveInfo('Autosave en progreso...'); const t = setTimeout(() => { safeWrite(`admin_article_autosave_${form.id || form.slug || 'new'}`, { ...form, autosavedAt: new Date().toISOString() }); setAutosaveInfo(`Autosave ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); }, 6000); return () => clearTimeout(t); }, [form]);
+  useEffect(() => () => {
+    if (internalPreview && internalPreview.startsWith('blob:')) URL.revokeObjectURL(internalPreview);
+  }, [internalPreview]);
+
+  const filtered = useMemo(() => articles.filter((a) => (a.title || '').toLowerCase().includes(search.toLowerCase()) && (statusFilter === 'all' || a.status === statusFilter)), [articles, search, statusFilter]);
+
+  const clearInternalImageDraft = () => {
+    setInternalFile(null);
+    setInternalAlt('');
+    setInternalCaption('');
+    setInternalDisplay('full');
+    setOptimizedInternalInfo(null);
+    setInternalPreview((prev) => {
+      if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+      return '';
+    });
+  };
+
+  const openArticle = (article) => {
+    const autosaved = safeRead(`admin_article_autosave_${article.id || article.slug || 'new'}`, null);
+    const next = autosaved && window.confirm('Se encontró autosave. ¿Restaurar?') ? { ...article, ...autosaved } : article;
+    setForm(next); setShowPreview(false); setLinkDraft({ url: '', newTab: false }); clearInternalImageDraft();
+  };
+
+  const persistMeta = (id, payload) => { const store = getArticleMetaStore(); store[String(id)] = payload; saveArticleMetaStore(store); };
+
+  const saveArticle = async () => {
+    if (!form.title.trim() || !form.slug.trim()) { toast({ title: 'Título y slug obligatorios', variant: 'destructive' }); return; }
+    if (form.metaTitle.length > 60 || form.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
+    const slug = slugify(form.slug);
+    const raw = editor?.getHTML() || form.content;
+    const content = normalizeHtml(raw);
+    if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
+    const payload = { title: form.title, slug, excerpt: form.subtitle, content, category: form.category, image_url: form.featuredImage || null, author: form.authorName || 'Equipo editorial', status: form.status, published_at: form.status === 'published' ? new Date().toISOString() : form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null };
+    let id = form.id; let savedRemotely = false;
+    const shouldUpdate = Boolean(form.id) && !String(form.id).startsWith('local-');
+    if (shouldUpdate) {
+      let { error } = await supabase.from('articles').update(payload).eq('id', form.id);
+      if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ error } = await supabase.from('articles').update(without).eq('id', form.id)); }
+      if (error) toast({ title: 'Guardado remoto falló', description: error.message, variant: 'destructive' }); else savedRemotely = true;
+    } else {
+      let { data, error } = await supabase.from('articles').insert([payload]).select('id').single();
+      if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ data, error } = await supabase.from('articles').insert([without]).select('id').single()); }
+      if (error) { id = `local-${Date.now()}`; toast({ title: 'Guardado local', description: 'No se pudo guardar en Supabase.', variant: 'destructive' }); } else { id = data.id; savedRemotely = true; }
+    }
+    const next = { ...form, id, slug, content, localOnly: String(id).startsWith('local-') };
+    persistMeta(id, next); logAdminAction('Artículo guardado', { id, title: form.title }); toast({ title: 'Artículo guardado' });
+    if (savedRemotely && form.status === 'published') {
+      try { const r = await refreshSitemapAfterPublish(); toast({ title: r.mode === 'build-only' ? 'Artículo publicado' : 'Sitemap actualizado', description: r.mode === 'build-only' ? 'El sitemap se actualizará en el próximo deploy/build.' : 'Se disparó actualización automática.' }); } catch { toast({ title: 'Artículo publicado', description: 'No se pudo disparar refresh remoto del sitemap. Se actualizará en el próximo deploy.', variant: 'destructive' }); }
+    }
+    setForm(next); await loadData();
+  };
+
+  const deleteArticle = async (article) => {
+    if (!window.confirm(`Eliminar ${article.title}?`)) return;
+    if (!String(article.id).startsWith('local-')) await supabase.from('articles').delete().eq('id', article.id);
+    const store = getArticleMetaStore(); delete store[String(article.id)]; saveArticleMetaStore(store);
+    setArticles((prev) => prev.filter((a) => String(a.id) !== String(article.id))); if (String(form.id) === String(article.id)) setForm({ ...emptyForm });
+  };
+
+  const duplicate = (article) => setForm({ ...article, id: null, title: `${article.title} (Copia)`, slug: `${article.slug}-copia-${Date.now().toString().slice(-4)}`, status: 'draft' });
+  const updateExternalLink = (index, value) => { const next = [...form.externalLinks]; next[index] = value; setForm((p) => ({ ...p, externalLinks: next })); };
+  const uploadFeatured = (event) => { const f = event.target.files?.[0]; if (!f) return; const url = URL.createObjectURL(f); setForm((p) => ({ ...p, featuredImage: url })); const next = [{ id: `${Date.now()}`, url, alt: '', name: f.name }, ...mediaLibrary].slice(0, 120); setMediaLibrary(next); saveMediaLibrary(next); };
+
+  const applyLink = () => {
+    const url = linkDraft.url.trim(); if (!url) { toast({ title: 'Ingresa URL del enlace', variant: 'destructive' }); return; }
+    const isInternal = url.startsWith('/') || url.startsWith('#');
+    editor?.chain().focus().extendMarkRange('link').setLink({ href: url, target: linkDraft.newTab ? '_blank' : null, rel: !isInternal || linkDraft.newTab ? 'noopener noreferrer' : null }).run();
+    setLinkDraft((p) => ({ ...p, url: '' }));
+  };
+
+  const onInternalFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsOptimizingInternalImage(true);
+    setOptimizedInternalInfo(null);
+    try {
+      let optimizedResult = null;
+      try {
+        optimizedResult = await optimizeToWebpWithEdgeFunction(file);
+      } catch (serverError) {
+        optimizedResult = null;
+        toast({
+          title: 'Optimizador servidor no disponible',
+          description: `${serverError.message} Se usará optimización local.`,
+        });
+      }
+
+      if (!optimizedResult) {
+        const optimized = await optimizeToEditorialWebp(file);
+        const optimizedFile = new File([optimized.blob], seoWebpName(file.name), {
+          type: 'image/webp',
+          lastModified: Date.now(),
+        });
+        optimizedResult = {
+          file: optimizedFile,
+          bytes: optimized.blob.size,
+          width: optimized.width,
+          height: optimized.height,
+          quality: optimized.quality,
+          mode: 'client',
+        };
+      }
+
+      const previewUrl = URL.createObjectURL(optimizedResult.file);
+      setInternalPreview((prev) => {
+        if (prev && prev.startsWith('blob:')) URL.revokeObjectURL(prev);
+        return previewUrl;
+      });
+      setInternalFile(optimizedResult.file);
+      setOptimizedInternalInfo({
+        bytes: optimizedResult.bytes,
+        width: optimizedResult.width,
+        height: optimizedResult.height,
+        quality: optimizedResult.quality,
+        mode: optimizedResult.mode,
+      });
+      toast({
+        title: 'Imagen optimizada automáticamente',
+        description: `${(optimizedResult.bytes / 1024).toFixed(1)}KB · ${optimizedResult.width}x${optimizedResult.height} · WebP`,
+      });
+    } catch (error) {
+      clearInternalImageDraft();
+      toast({
+        title: 'No se pudo optimizar la imagen',
+        description: error.message || 'Intenta con otra imagen o menor resolución.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsOptimizingInternalImage(false);
+      e.target.value = '';
+    }
+  };
+  const insertInternalImage = async () => {
+    if (!editor || !internalFile) { toast({ title: 'Selecciona una imagen', variant: 'destructive' }); return; }
+    if (!internalAlt.trim()) { toast({ title: 'ALT obligatorio', variant: 'destructive' }); return; }
+    if (countImages(editor.getJSON()) >= MAX_IMAGES) { toast({ title: `Máximo ${MAX_IMAGES} imágenes por artículo`, variant: 'destructive' }); return; }
+    if (internalFile.size > MAX_IMAGE_BYTES) { toast({ title: 'Imagen excede 300KB', variant: 'destructive' }); return; }
+    const seoNameSource = internalAlt.trim() || internalCaption.trim() || internalFile.name;
+    const renamedFile = new File([internalFile], seoWebpName(seoNameSource), {
+      type: 'image/webp',
+      lastModified: Date.now(),
+    });
+    const lower = renamedFile.name.toLowerCase();
+    if (!WEBP_NAME.test(lower)) { toast({ title: 'Nombre inválido', description: 'Usa formato palabras-clave-separadas-por-guiones.webp', variant: 'destructive' }); return; }
+    const src = await toDataUrl(renamedFile);
+    const display = internalDisplay === 'caption' ? 'center' : internalDisplay;
+    editor.chain().focus().setImage({
+      src,
+      alt: internalAlt.trim(),
+      title: internalCaption.trim() || internalAlt.trim(),
+      display,
+      width: optimizedInternalInfo?.width || null,
+      height: optimizedInternalInfo?.height || null,
+    }).run();
+    if (internalDisplay === 'caption') editor.chain().focus().insertContent(`<p><em>${escapeHtml(internalCaption.trim() || internalAlt.trim())}</em></p>`).run();
+    const next = [{ id: `${Date.now()}`, url: src, alt: internalAlt.trim(), name: renamedFile.name }, ...mediaLibrary].slice(0, 120);
+    setMediaLibrary(next); saveMediaLibrary(next); clearInternalImageDraft(); toast({ title: 'Imagen insertada' });
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-100">CMS avanzado de artículos</h2>
+          <p className="text-sm text-slate-400">{autosaveInfo}</p>
+          <p className="text-xs text-slate-500 mt-1">H1 lo controla el título. En contenido se permite H2, H3 y H4.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowPreview((v) => !v)}><Eye className="w-4 h-4 mr-2" />{showPreview ? 'Editar' : 'Vista previa'}</Button>
+          <Button onClick={saveArticle}><Save className="w-4 h-4 mr-2" />Guardar</Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+        <Card className="xl:col-span-4 border-slate-700/70 bg-slate-900/70">
+          <CardHeader className="space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1"><Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-8" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-lg border border-slate-600 bg-slate-700/50 px-2 text-sm text-slate-100"><option value="all">Todos</option>{STATUS.map((s) => <option key={s} value={s}>{s}</option>)}</select>
+            </div>
+            <Button onClick={() => setForm({ ...emptyForm })}><Plus className="w-4 h-4 mr-2" />Nuevo artículo</Button>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto">
+            {filtered.map((a) => (
+              <div key={a.id} className="rounded-lg border border-slate-700 p-3 bg-slate-950/50">
+                <p className="font-semibold text-slate-100 line-clamp-2">{a.title}</p><p className="text-xs text-slate-400">{a.slug}</p>
+                <div className="flex gap-1 mt-2">
+                  <Button size="icon" variant="ghost" onClick={() => openArticle(a)}><Eye className="w-4 h-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => duplicate(a)}><Copy className="w-4 h-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => deleteArticle(a)}><Trash2 className="w-4 h-4 text-rose-400" /></Button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <div className="xl:col-span-8 space-y-5">
+          <Card className="border-slate-700/70 bg-slate-900/70">
+            <CardHeader><CardTitle className="text-slate-100">Información y SEO</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2"><Label>Título (H1)</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
+              <div className="md:col-span-2"><Label>Subtítulo</Label><Input value={form.subtitle} onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))} /></div>
+              <div><Label>Slug</Label><Input value={form.slug} onChange={(e) => setForm((p) => ({ ...p, slug: slugify(e.target.value) }))} /><p className="text-[11px] text-slate-400 mt-1">Normalizado: {slugify(form.slug || form.title) || '-'}</p></div>
+              <div><Label>Categoría</Label><select value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100">{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
+              <div><Label>Estado</Label><select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100">{STATUS.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
+              <div><Label>Fecha programada</Label><Input type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm((p) => ({ ...p, scheduledAt: e.target.value }))} /></div>
+              <div><Label>Autor</Label><Input value={form.authorName} onChange={(e) => setForm((p) => ({ ...p, authorName: e.target.value }))} placeholder={authors[0]?.name || 'Autor'} /></div>
+              <div><Label>Meta title ({form.metaTitle.length}/60)</Label><Input value={form.metaTitle} onChange={(e) => setForm((p) => ({ ...p, metaTitle: e.target.value }))} className={form.metaTitle.length > 60 ? 'border-amber-400' : ''} /></div>
+              <div><Label>Keyword principal</Label><Input value={form.focusKeyword} onChange={(e) => setForm((p) => ({ ...p, focusKeyword: e.target.value }))} /></div>
+              <div className="md:col-span-2"><Label>Meta description ({form.metaDescription.length}/160)</Label><textarea value={form.metaDescription} onChange={(e) => setForm((p) => ({ ...p, metaDescription: e.target.value }))} rows={2} className={`w-full rounded-lg border px-3 py-2 text-sm ${form.metaDescription.length > 160 ? 'border-amber-400 bg-slate-700/50 text-slate-100' : 'border-slate-600 bg-slate-700/50 text-slate-100'}`} /></div>
+              <div><Label>Keywords secundarias</Label><Input value={form.secondaryKeywords} onChange={(e) => setForm((p) => ({ ...p, secondaryKeywords: e.target.value }))} /></div>
+              <div><Label>Canonical</Label><Input value={form.canonical} onChange={(e) => setForm((p) => ({ ...p, canonical: e.target.value }))} /></div>
+              <div className="md:col-span-2 flex items-center justify-between rounded-lg border border-slate-700 p-2"><span className="text-sm text-slate-200">No-index</span><input type="checkbox" checked={form.noIndex} onChange={(e) => setForm((p) => ({ ...p, noIndex: e.target.checked }))} className="h-4 w-4 accent-emerald-500" /></div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-700/70 bg-slate-900/70">
+            <CardHeader><CardTitle className="text-slate-100">Editor profesional y multimedia</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div><Label>Imagen destacada</Label><Input type="file" accept="image/*" onChange={uploadFeatured} />{form.featuredImage ? <img src={form.featuredImage} alt="featured" className="mt-2 rounded-lg border border-slate-700 max-h-36 object-cover w-full" /> : null}</div>
+                <div><Label>Video embebido</Label><Input value={form.videoEmbed} onChange={(e) => setForm((p) => ({ ...p, videoEmbed: e.target.value }))} placeholder="URL YouTube/TikTok/Vimeo" /></div>
+              </div>
+
+              <div id="internal-image-panel" className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold text-slate-100">Imágenes internas</p><p className="text-xs text-slate-400">Máximo {MAX_IMAGES} | 300KB | WebP final automático | ancho máx. {MAX_IMAGE_WIDTH}px</p></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div><Label>Subida desde panel</Label><Input type="file" accept="image/*" onChange={onInternalFile} disabled={isOptimizingInternalImage} /></div>
+                  <div><Label>Posicionamiento</Label><select value={internalDisplay} onChange={(e) => setInternalDisplay(e.target.value)} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100"><option value="full">Ancho completo</option><option value="center">Centrada</option><option value="caption">Con caption</option></select></div>
+                  <div><Label>ALT obligatorio</Label><Input value={internalAlt} onChange={(e) => setInternalAlt(e.target.value)} placeholder="Descripción con valor explicativo" /></div>
+                  <div><Label>Descripción opcional</Label><Input value={internalCaption} onChange={(e) => setInternalCaption(e.target.value)} placeholder="Caption breve" /></div>
+                </div>
+                {isOptimizingInternalImage ? <p className="text-xs text-emerald-300">Optimizando imagen a WebP...</p> : null}
+                {optimizedInternalInfo ? (
+                  <p className="text-xs text-slate-300">
+                    Optimizada ({optimizedInternalInfo.mode === 'server' ? 'servidor' : 'cliente'}): {(optimizedInternalInfo.bytes / 1024).toFixed(1)}KB · {optimizedInternalInfo.width}x{optimizedInternalInfo.height} · calidad {(optimizedInternalInfo.quality * 100).toFixed(0)}%
+                  </p>
+                ) : null}
+                {internalPreview ? <img src={internalPreview} alt="preview" className="max-h-52 rounded-md object-contain w-full bg-slate-950/60 border border-slate-700" /> : null}
+                <div className="flex items-center justify-between gap-2 flex-wrap"><p className="text-xs text-slate-400">Nombre SEO final automático: <code>palabras-clave-separadas-por-guiones.webp</code></p><Button variant="outline" onClick={insertInternalImage} disabled={isOptimizingInternalImage}><ImagePlus className="w-4 h-4 mr-2" />Insertar imagen</Button></div>
+              </div>
+
+              <div>
+                <Label>Enlaces externos</Label>
+                {form.externalLinks.map((link, index) => (
+                  <div key={`${index}-${link}`} className="flex gap-2 mt-2">
+                    <Input value={link} onChange={(e) => updateExternalLink(index, e.target.value)} />
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setForm((p) => ({
+                          ...p,
+                          externalLinks: p.externalLinks.filter((_, idx) => idx !== index).length
+                            ? p.externalLinks.filter((_, idx) => idx !== index)
+                            : [''],
+                        }))
+                      }
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => setForm((p) => ({ ...p, externalLinks: [...p.externalLinks, ''] }))}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Añadir enlace
+                </Button>
+              </div>
+
+              <div className="sticky top-2 z-20 rounded-xl border border-slate-700 bg-slate-950/95 backdrop-blur">
+                <div className="p-2 flex flex-wrap gap-2 items-center border-b border-slate-800">
+                  <button type="button" title="Insertar H2" className={btn(false)} onClick={() => editor?.chain().focus().insertContent('<h2>Nuevo subtítulo</h2><p></p>').run()}><Heading2 className="w-4 h-4" /></button>
+                  <button type="button" title="H2" className={btn(editor?.isActive('heading', { level: 2 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="w-4 h-4" /></button>
+                  <button type="button" title="H3" className={btn(editor?.isActive('heading', { level: 3 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}><Heading3 className="w-4 h-4" /></button>
+                  <button type="button" title="H4" className={btn(editor?.isActive('heading', { level: 4 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 4 }).run()}><Heading4 className="w-4 h-4" /></button>
+                  <button type="button" title="Negrita" className={btn(editor?.isActive('bold'))} onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="w-4 h-4" /></button>
+                  <button type="button" title="Cursiva" className={btn(editor?.isActive('italic'))} onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="w-4 h-4" /></button>
+                  <button type="button" title="Subrayado" className={btn(editor?.isActive('editorialUnderline'))} onClick={() => editor?.chain().focus().toggleEditorialUnderline().run()}><Underline className="w-4 h-4" /></button>
+                  <button type="button" title="Tachado" className={btn(editor?.isActive('strike'))} onClick={() => editor?.chain().focus().toggleStrike().run()}><Strikethrough className="w-4 h-4" /></button>
+                  <button type="button" title="Código inline" className={btn(editor?.isActive('code'))} onClick={() => editor?.chain().focus().toggleCode().run()}><Code2 className="w-4 h-4" /></button>
+                  {COLORS.map((c) => <button key={c} type="button" title={`Color ${c}`} className={btn(editor?.isActive('editorialColor', { color: c }))} onClick={() => editor?.chain().focus().setEditorialColor(c).run()}><Palette className="w-4 h-4 mr-1" /><span className="w-3 h-3 rounded-full border border-slate-400" style={{ backgroundColor: c }} /></button>)}
+                  <button type="button" title="Quitar color" className={btn(false)} onClick={() => editor?.chain().focus().unsetEditorialColor().run()}><Minus className="w-4 h-4" /></button>
+                  <button type="button" title="Lista viñetas" className={btn(editor?.isActive('bulletList'))} onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="w-4 h-4" /></button>
+                  <button type="button" title="Lista numerada" className={btn(editor?.isActive('orderedList'))} onClick={() => editor?.chain().focus().toggleOrderedList().run()}><ListOrdered className="w-4 h-4" /></button>
+                  <button type="button" title="Checklist" className={btn(false)} onClick={() => editor?.chain().focus().insertContent('<ul><li>☐ Tarea 1</li><li>☐ Tarea 2</li></ul>').run()}><CheckSquare className="w-4 h-4" /></button>
+                  <button type="button" title="Cita destacada" className={btn(editor?.isActive('blockquote'))} onClick={() => editor?.chain().focus().toggleBlockquote().run()}><Quote className="w-4 h-4" /></button>
+                  <button type="button" title="Tabla" className={btn(false)} onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Table2 className="w-4 h-4" /></button>
+                  <button type="button" title="Separador" className={btn(false)} onClick={() => editor?.chain().focus().setHorizontalRule().run()}><Minus className="w-4 h-4" /></button>
+                  <button type="button" title="Bloque resumen" className={btn(false)} onClick={() => editor?.chain().focus().insertEditorialSummary().run()}><ListChecks className="w-4 h-4" /></button>
+                  <button type="button" title="Bloque advertencia" className={btn(false)} onClick={() => editor?.chain().focus().insertEditorialWarning().run()}><AlertTriangle className="w-4 h-4" /></button>
+                  <button type="button" title="Insertar imagen" className={btn(false)} onClick={() => document.getElementById('internal-image-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><ImagePlus className="w-4 h-4" /></button>
+                </div>
+                <div className="p-2 flex flex-wrap gap-2 items-center">
+                  <div className="flex-1 min-w-[220px]"><Input value={linkDraft.url} onChange={(e) => setLinkDraft((p) => ({ ...p, url: e.target.value }))} placeholder="Enlace interno o externo" /></div>
+                  <label className="text-xs text-slate-300 flex items-center gap-2"><input type="checkbox" checked={linkDraft.newTab} onChange={(e) => setLinkDraft((p) => ({ ...p, newTab: e.target.checked }))} className="h-4 w-4 accent-emerald-500" />Nueva pestaña</label>
+                  <Button variant="outline" onClick={applyLink}><Link2 className="w-4 h-4 mr-2" />Insertar enlace</Button>
+                  <Button variant="outline" onClick={() => editor?.chain().focus().unsetLink().run()}><Link2Off className="w-4 h-4 mr-2" />Quitar enlace</Button>
+                </div>
+              </div>
+
+              <div className="min-h-[320px] rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-slate-100"><EditorContent editor={editor} className="editorial-editor" /></div>
+            </CardContent>
+          </Card>
+
+          {showPreview ? (
+            <Card className="border-slate-700/70 bg-slate-900/70">
+              <CardHeader><CardTitle className="text-slate-100">Vista previa profesional</CardTitle></CardHeader>
+              <CardContent>
+                <article className="editorial-preview rounded-2xl bg-white text-slate-900 p-4 sm:p-8">
+                  <header className="mb-8 border-b border-slate-200 pb-6">
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500">{form.category || 'General'}</p>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold mt-2">{form.title || 'Título del artículo'}</h1>
+                    {form.subtitle ? <p className="text-slate-600 mt-3 text-lg">{form.subtitle}</p> : null}
+                  </header>
+                  {form.featuredImage ? <div className="rounded-2xl overflow-hidden mb-8 border border-slate-200"><img src={form.featuredImage} alt={form.title || 'Imagen destacada'} className="w-full h-auto max-h-[420px] object-cover" /></div> : null}
+                  <div className="editorial-content" dangerouslySetInnerHTML={{ __html: normalizeHtml(form.content || '<p>Sin contenido.</p>') }} />
+                </article>
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ArticleManagementModule;
