@@ -8,9 +8,18 @@ const Footer = () => {
       <div className="mx-auto w-full max-w-[1100px]">
         <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-foreground">
-              <span className="text-primary">Bienestar</span> en Claro
-            </h3>
+            <div className="flex items-center gap-3">
+              <img
+                src="/images/logo.png"
+                alt="Logo Bienestar en Claro"
+                className="h-9 w-9 rounded-lg object-contain"
+                loading="lazy"
+                decoding="async"
+              />
+              <h3 className="text-xl font-bold text-foreground">
+                <span className="text-primary">Bienestar</span> en Claro
+              </h3>
+            </div>
             <p className="max-w-sm text-sm leading-6 text-muted-foreground">
               Divulgación editorial sobre salud metabólica con claridad, límites explícitos y enfoque
               latinoamericano.

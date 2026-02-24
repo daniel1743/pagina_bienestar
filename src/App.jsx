@@ -8,7 +8,8 @@ import ScrollToTop from './components/ScrollToTop';
 import { Toaster } from '@/components/ui/toaster';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import FooterV2 from '@/components/FooterV2';
+import CookieConsentBanner from '@/components/CookieConsentBanner';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -23,6 +24,7 @@ import GetStartedPage from './pages/GetStartedPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
 import EditorialStubPage from './pages/EditorialStubPage';
+import InfoStubPage from './pages/InfoStubPage';
 
 function AppLayout() {
   const location = useLocation();
@@ -44,8 +46,20 @@ function AppLayout() {
           <Route path="/comunidad" element={<CommunityPage />} />
           <Route path="/empieza-aqui" element={<GetStartedPage />} />
           <Route path="/empieza-aqui/:slug" element={<EditorialStubPage />} />
+          <Route path="/guias" element={<InfoStubPage />} />
           <Route path="/guias/:slug" element={<EditorialStubPage />} />
           <Route path="/categorias/:slug" element={<EditorialStubPage />} />
+          <Route path="/metodologia-editorial" element={<InfoStubPage />} />
+          <Route path="/transparencia" element={<InfoStubPage />} />
+          <Route path="/correcciones" element={<InfoStubPage />} />
+          <Route path="/afiliacion" element={<InfoStubPage />} />
+          <Route path="/contacto" element={<InfoStubPage />} />
+          <Route path="/colaboraciones" element={<InfoStubPage />} />
+          <Route path="/reportar-error" element={<InfoStubPage />} />
+          <Route path="/faq" element={<InfoStubPage />} />
+          <Route path="/glosario" element={<InfoStubPage />} />
+          <Route path="/cookies" element={<InfoStubPage />} />
+          <Route path="/newsletter" element={<InfoStubPage />} />
           <Route path="/perfil/:id" element={<UserProfilePage />} />
           
           {/* Static Pages via LegalPage component */}
@@ -63,7 +77,8 @@ function AppLayout() {
           <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         </Routes>
       </main>
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <FooterV2 />}
+      {!isAdminRoute && <CookieConsentBanner />}
     </div>
   );
 }

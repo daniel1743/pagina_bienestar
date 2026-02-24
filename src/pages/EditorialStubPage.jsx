@@ -8,7 +8,17 @@ const GUIDE_MAP = {
     description:
       'Marco editorial para entender hígado graso, marcadores y decisiones de estilo de vida.',
   },
+  'higado-graso': {
+    title: 'Guía de hígado graso',
+    description:
+      'Ruta práctica para comprender hígado graso, factores de riesgo y decisiones sostenibles.',
+  },
   'resistencia-a-la-insulina': {
+    title: 'Guía de resistencia a la insulina',
+    description:
+      'Explicación estructurada sobre señales, exámenes y hábitos sostenibles para contexto latinoamericano.',
+  },
+  'resistencia-insulina': {
     title: 'Guía de resistencia a la insulina',
     description:
       'Explicación estructurada sobre señales, exámenes y hábitos sostenibles para contexto latinoamericano.',
@@ -17,6 +27,11 @@ const GUIDE_MAP = {
     title: 'Guía de inflamación metabólica',
     description:
       'Relación entre inflamación crónica, sueño, estrés y decisiones prácticas del día a día.',
+  },
+  'examenes-y-marcadores': {
+    title: 'Guía de exámenes y marcadores',
+    description:
+      'Interpretación general de marcadores frecuentes y preguntas útiles para consulta.',
   },
 };
 
@@ -53,6 +68,16 @@ const CATEGORY_MAP = {
     title: 'Categoría: Insulina',
     description:
       'Piezas para entender resistencia a la insulina, señales tempranas y decisiones cotidianas.',
+  },
+  inflamacion: {
+    title: 'Categoría: Inflamación',
+    description:
+      'Contenido editorial sobre inflamación crónica de bajo grado y factores de estilo de vida.',
+  },
+  microbiota: {
+    title: 'Categoría: Microbiota',
+    description:
+      'Artículos introductorios sobre microbiota, salud digestiva y contexto metabólico.',
   },
 };
 

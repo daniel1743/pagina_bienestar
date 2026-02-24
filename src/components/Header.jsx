@@ -22,7 +22,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border shadow-sm transition-colors duration-300">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm transition-colors duration-200 md:bg-background/80 md:backdrop-blur-sm">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center">
           <BrandLogo compact />

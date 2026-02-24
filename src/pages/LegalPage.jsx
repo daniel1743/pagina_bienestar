@@ -27,6 +27,11 @@ const contentMap = {
   '/empieza-aqui': { title: 'Empieza Aquí', content: 'Guía para comenzar a entender tu salud de manera sencilla.' },
   '/legal/politica-privacidad': { title: 'Política de Privacidad', content: 'Contenido de la política de privacidad...' },
   '/legal/privacidad': { title: 'Política de Privacidad', content: 'Contenido de la política de privacidad...' },
+  '/legal/cookies': {
+    title: 'Política de Cookies',
+    content:
+      'Usamos cookies esenciales para funcionamiento y seguridad. Las cookies no esenciales (analítica/marketing/externos) solo se activan con tu consentimiento y puedes cambiar esta preferencia en cualquier momento.',
+  },
   '/legal/terminos': { title: 'Términos de Servicio', content: 'Contenido de los términos...' },
   '/legal/aviso-medico': { title: 'Aviso Médico', content: 'Este sitio es solo educativo y no sustituye la consulta médica profesional.' },
   '/legal/descargo': { title: 'Descargo Médico', content: 'Este sitio es solo educativo y no sustituye la consulta médica profesional.' },

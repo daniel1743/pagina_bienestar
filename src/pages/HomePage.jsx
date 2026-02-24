@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   BookOpen,
   ChevronRight,
@@ -18,10 +18,10 @@ import { getGlobalSettings } from '@/lib/adminConfig';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
 
 const fadeUp = {
-  initial: { opacity: 0, y: 18 },
+  initial: { opacity: 0, y: 12 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.2 },
-  transition: { duration: 0.45, ease: 'easeOut' },
+  transition: { duration: 0.35, ease: 'easeOut' },
 };
 
 const titleClampStyle = {
@@ -66,6 +66,10 @@ const calculateReadingMinutes = (article) => {
 const HomePage = () => {
   const [articles, setArticles] = useState([]);
   const [globalSettings] = useState(() => getGlobalSettings());
+  const reduceMotion = useReducedMotion();
+  const revealProps = reduceMotion
+    ? { initial: false, whileInView: { opacity: 1, y: 0 }, viewport: { once: true } }
+    : fadeUp;
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -119,57 +123,95 @@ const HomePage = () => {
         <meta property="og:url" content={siteUrl} />
       </Helmet>
 
-      <section id="hero" className="bg-white px-4 pb-20 pt-16 dark:bg-background md:pt-20">
-        <div className="mx-auto grid w-full max-w-[1100px] gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
-          <motion.div {...fadeUp} className="max-w-[650px] space-y-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
+      <section
+        id="hero"
+        className="bg-[linear-gradient(135deg,#0B1220_0%,#0E1A2F_55%,#0B1220_100%)] px-4 py-28"
+      >
+        <div className="mx-auto grid w-full max-w-[1100px] gap-10 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+          <motion.div {...revealProps} className="space-y-8 text-center md:text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/60">
               Plataforma editorial latinoamericana
             </p>
-            <h1 className="text-4xl font-bold leading-tight text-slate-900 dark:text-foreground md:text-5xl">
-              Bienestar basado en evidencia, explicado con claridad.
+            <h1 className="mx-auto max-w-[800px] text-3xl font-bold leading-tight text-white md:mx-0 md:text-5xl">
+              Salud metabólica basada en evidencia, sin exageraciones.
             </h1>
-            <p className="text-lg leading-relaxed text-slate-700 dark:text-muted-foreground">
-              Divulgación sobre metabolismo, inflamación y salud hepática con enfoque
-              latinoamericano, sin exageraciones.
+            <p className="mx-auto mt-6 max-w-[700px] text-base leading-relaxed text-white/80 md:mx-0 md:text-lg">
+              Explicamos lo que se sabe hoy sobre hígado graso, resistencia a la insulina e
+              inflamación metabólica con enfoque práctico, claridad editorial y límites explícitos.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-12 rounded-2xl bg-[#1d4e89] px-6 text-white hover:bg-[#163b68]">
-                <Link to="/articulos?categoria=diagnosticos">Explorar diagnósticos</Link>
+            <div className="flex flex-wrap justify-center gap-3 md:justify-start">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 rounded-2xl bg-[#34D399] px-6 text-[#0B1220] hover:bg-[#2CC98C]"
+              >
+                <Link to="/guias">Explorar guías</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-12 rounded-2xl border-slate-300 px-6 text-slate-700 hover:bg-slate-100 dark:border-border dark:text-foreground">
-                <a href="#empieza-aqui">Empieza aquí</a>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-12 rounded-2xl border-white/30 bg-transparent px-6 text-white hover:bg-white/10 hover:text-white"
+              >
+                <Link to="/empieza-aqui">Empieza aquí</Link>
               </Button>
             </div>
-            <ul className="grid gap-2 pt-1 text-sm text-slate-600 dark:text-muted-foreground sm:grid-cols-3">
-              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-card">
-                Sin promesas milagro
-              </li>
-              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-card">
-                Estructura clara
-              </li>
-              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-card">
-                Fuentes confiables
-              </li>
+            <ul className="flex flex-wrap justify-center gap-x-6 gap-y-3 pt-2 text-sm text-white/75 md:justify-start">
+              <li>Guías actualizadas periódicamente</li>
+              <li>Sin promesas milagro</li>
+              <li>Contenido educativo, no diagnóstico</li>
+              <li>Enfoque latinoamericano</li>
             </ul>
           </motion.div>
 
-          <motion.figure {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg dark:border-border dark:bg-card">
-            <img
-              src="https://images.unsplash.com/photo-1573497019418-b400bb3ab074?auto=format&fit=crop&w=1200&q=80&fm=webp"
-              alt="Editora revisando notas sobre salud en un escritorio"
-              className="h-full w-full object-cover"
-              width={900}
-              height={1100}
-              decoding="async"
-              loading="eager"
-              fetchPriority="high"
-            />
-          </motion.figure>
+          <motion.div
+            {...revealProps}
+            transition={reduceMotion ? { duration: 0 } : { ...fadeUp.transition, delay: 0.08 }}
+            className="pointer-events-none relative hidden h-[380px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] opacity-85 lg:block"
+          >
+            <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-[#34D399]/14" />
+            <div className="absolute -bottom-10 left-8 h-40 w-40 rounded-full bg-[#60A5FA]/12" />
+            <svg
+              viewBox="0 0 640 420"
+              className="h-full w-full scale-105"
+              role="img"
+              aria-label="Ilustración abstracta de metabolismo"
+            >
+              <defs>
+                <linearGradient id="metabPath" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#93C5FD" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#34D399" stopOpacity="0.65" />
+                </linearGradient>
+              </defs>
+              <circle cx="320" cy="210" r="126" stroke="url(#metabPath)" strokeWidth="1.2" fill="none" />
+              <circle cx="320" cy="210" r="92" stroke="#E2E8F0" strokeOpacity="0.28" strokeWidth="1" fill="none" />
+              <path
+                d="M86 248 C164 168, 236 128, 324 160 C410 192, 486 158, 556 104"
+                stroke="url(#metabPath)"
+                strokeWidth="2.2"
+                fill="none"
+              />
+              <path
+                d="M108 318 C182 252, 258 214, 336 234 C410 252, 478 228, 544 180"
+                stroke="#A7F3D0"
+                strokeOpacity="0.6"
+                strokeWidth="1.6"
+                fill="none"
+              />
+              <circle cx="164" cy="188" r="6" fill="#93C5FD" fillOpacity="0.85" />
+              <circle cx="264" cy="146" r="6" fill="#34D399" fillOpacity="0.85" />
+              <circle cx="392" cy="178" r="6" fill="#93C5FD" fillOpacity="0.8" />
+              <circle cx="474" cy="152" r="7" fill="#34D399" fillOpacity="0.82" />
+              <circle cx="232" cy="268" r="5" fill="#E2E8F0" fillOpacity="0.65" />
+              <circle cx="352" cy="246" r="5" fill="#E2E8F0" fillOpacity="0.65" />
+              <circle cx="430" cy="228" r="5" fill="#E2E8F0" fillOpacity="0.65" />
+            </svg>
+          </motion.div>
         </div>
       </section>
 
       <section id="diferenciacion" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
-        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+        <motion.div {...revealProps} className="mx-auto w-full max-w-[1100px]">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">
             ¿Por qué Bienestar en Claro es diferente?
           </h2>
@@ -204,7 +246,7 @@ const HomePage = () => {
       </section>
 
       <section id="pilares-editoriales" className="bg-white px-4 py-20 dark:bg-background">
-        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+        <motion.div {...revealProps} className="mx-auto w-full max-w-[1100px]">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">Áreas centrales</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
@@ -224,7 +266,7 @@ const HomePage = () => {
                 to: '/guias/inflamacion-metabolica',
               },
             ].map((item) => (
-              <Card key={item.title} className="group rounded-2xl border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
+              <Card key={item.title} className="group rounded-2xl border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
                 <CardContent className="space-y-4 p-6">
                   <h3 className="text-xl font-semibold text-slate-900 dark:text-foreground">{item.title}</h3>
                   <p className="text-sm leading-6 text-slate-600 dark:text-muted-foreground">{item.description}</p>
@@ -243,7 +285,7 @@ const HomePage = () => {
       </section>
 
       <section id="autor-confianza" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
-        <motion.div {...fadeUp} className="mx-auto flex w-full max-w-[1100px] flex-col items-start gap-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-border dark:bg-card md:flex-row md:items-center">
+        <motion.div {...revealProps} className="mx-auto flex w-full max-w-[1100px] flex-col items-start gap-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-border dark:bg-card md:flex-row md:items-center">
           <img
             src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80&fm=webp"
             alt="Retrato profesional de Daniel Falcón"
@@ -284,7 +326,7 @@ const HomePage = () => {
       </section>
 
       <section id="empieza-aqui" className="bg-white px-4 py-20 dark:bg-background">
-        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+        <motion.div {...revealProps} className="mx-auto w-full max-w-[1100px]">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">Empieza aquí</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
@@ -319,7 +361,7 @@ const HomePage = () => {
       </section>
 
       <section id="ultimas-publicaciones" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
-        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+        <motion.div {...revealProps} className="mx-auto w-full max-w-[1100px]">
           <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">Últimas publicaciones</h2>
@@ -335,7 +377,7 @@ const HomePage = () => {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {articles.map((article) => (
               <Link key={article.id || article.slug} to={`/articulos/${article.slug}`} className="group block">
-                <Card className="flex h-full flex-col overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
+                <Card className="flex h-full flex-col overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
                   <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-muted">
                     {article.image_url ? (
                       <img
@@ -383,7 +425,7 @@ const HomePage = () => {
       </section>
 
       <section id="comunidad" className="bg-white px-4 py-20 dark:bg-background">
-        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px] rounded-3xl border border-slate-200 bg-[#eff6ff] p-8 dark:border-border dark:bg-card">
+        <motion.div {...revealProps} className="mx-auto w-full max-w-[1100px] rounded-3xl border border-slate-200 bg-[#eff6ff] p-8 dark:border-border dark:bg-card">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground">Comunidad de aprendizaje</h2>
           <p className="mt-3 max-w-[780px] leading-7 text-slate-700 dark:text-muted-foreground">
             Un espacio moderado para aprender y compartir experiencias sin reemplazar atención
@@ -396,7 +438,7 @@ const HomePage = () => {
       </section>
 
       <section id="transparencia" className="border-t border-slate-200 bg-[#f8fafc] px-4 py-20 dark:border-border dark:bg-background">
-        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+        <motion.div {...revealProps} className="mx-auto w-full max-w-[1100px]">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">
             Transparencia editorial
           </h2>
