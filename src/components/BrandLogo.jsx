@@ -35,7 +35,7 @@ const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 
             </span>
             <span
               className={cn('mt-0.5 font-normal leading-none', secondaryTextClasses)}
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92em', letterSpacing: '0px' }}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.9em', letterSpacing: '0px' }}
             >
               en Claro
             </span>
@@ -49,7 +49,7 @@ const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 
               Bienestar{' '}
               <span
                 className={cn('font-normal', secondaryTextClasses)}
-                style={{ fontSize: '0.92em', letterSpacing: '0px' }}
+                style={{ fontSize: '0.9em', letterSpacing: '0px' }}
               >
                 en Claro
               </span>

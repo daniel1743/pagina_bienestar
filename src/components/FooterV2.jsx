@@ -10,10 +10,26 @@ const quickLinks = [
 ];
 
 const guideLinks = [
-  { label: 'Guía: Hígado graso', to: '/guias/higado-graso' },
-  { label: 'Guía: Resistencia a la insulina', to: '/guias/resistencia-insulina' },
-  { label: 'Guía: Inflamación metabólica', to: '/guias/inflamacion-metabolica' },
-  { label: 'Guía: Exámenes y marcadores', to: '/guias/examenes-y-marcadores' },
+  {
+    label: 'Guía: Hígado graso',
+    to: '/guias/higado-graso',
+    summary: 'Enfoque MASLD/SLD, riesgo de fibrosis y relación cardiometabólica.',
+  },
+  {
+    label: 'Guía: Resistencia a la insulina',
+    to: '/guias/resistencia-insulina',
+    summary: 'Músculo, hígado y tejido adiposo: lectura por patrón y contexto clínico.',
+  },
+  {
+    label: 'Guía: Inflamación metabólica',
+    to: '/guias/inflamacion-metabolica',
+    summary: 'Inflamación crónica de bajo grado y su vínculo con metabolismo e hígado.',
+  },
+  {
+    label: 'Guía: Exámenes y marcadores',
+    to: '/guias/examenes-y-marcadores',
+    summary: 'Glucosa, HbA1c, lípidos, FIB-4 y elastografía sin sobrediagnóstico.',
+  },
   { label: 'Ver todos los artículos', to: '/articulos' },
 ];
 
@@ -34,10 +50,12 @@ const resourceLinks = [
 ];
 
 const legalLinksBase = [
+  { label: 'Políticas y seguridad', to: '/politicas-seguridad' },
   { label: 'Descargo médico', to: '/descargo' },
   { label: 'Política de privacidad', to: '/privacidad' },
   { label: 'Términos de uso', to: '/terminos' },
   { label: 'Política de cookies', to: '/cookies' },
+  { label: 'Seguridad de la información', to: '/seguridad' },
   { label: 'Correcciones y actualizaciones', to: '/correcciones' },
 ];
 
@@ -172,12 +190,15 @@ const FooterV2 = ({ showAffiliateDisclosure = false }) => {
 
           <div>
             <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.08em] text-white/90">Guías</h4>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-sm">
               {guideLinks.map((link) => (
                 <li key={link.to}>
-                  <Link to={link.to} className="text-white/80 transition-colors hover:text-[#34D399]">
+                  <Link to={link.to} className="text-white/85 transition-colors hover:text-[#34D399]">
                     {link.label}
                   </Link>
+                  {link.summary ? (
+                    <p className="mt-1 text-xs leading-5 text-white/55">{link.summary}</p>
+                  ) : null}
                 </li>
               ))}
             </ul>

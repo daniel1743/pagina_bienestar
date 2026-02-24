@@ -54,6 +54,52 @@ CREATE INDEX idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
 ```
 
+## Tabla `error_reports` (tickets de Reportar error)
+
+Si aún no existe, crea la tabla:
+
+```sql
+CREATE TABLE error_reports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  ticket_code TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  detail TEXT NOT NULL CHECK (char_length(detail) <= 500),
+  reporter_name TEXT NOT NULL,
+  reporter_email TEXT NOT NULL,
+  source_path TEXT,
+  status TEXT NOT NULL DEFAULT 'nuevo',
+  email_status TEXT NOT NULL DEFAULT 'pendiente',
+  email_sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_error_reports_created_at ON error_reports(created_at DESC);
+CREATE INDEX idx_error_reports_status ON error_reports(status);
+CREATE INDEX idx_error_reports_email ON error_reports(reporter_email);
+```
+
+Políticas básicas (ajusta según tu modelo de seguridad):
+
+```sql
+ALTER TABLE error_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can insert error reports"
+ON error_reports FOR INSERT
+TO public
+WITH CHECK (true);
+
+CREATE POLICY "Authenticated can read error reports"
+ON error_reports FOR SELECT
+TO authenticated
+USING (true);
+
+CREATE POLICY "Authenticated can update error reports"
+ON error_reports FOR UPDATE
+TO authenticated
+USING (true)
+WITH CHECK (true);
+```
+
 ## Sitemap automático (sin actualización manual)
 
 El proyecto ahora genera `public/sitemap.xml` automáticamente en cada `npm run build` leyendo artículos publicados desde Supabase.
@@ -114,3 +160,30 @@ VITE_IMAGE_OPTIMIZER_FUNCTION_NAME=image-optimize
 ```
 
 Si no está configurada, el CMS usa fallback local en navegador.
+
+## Edge Function para correo de ticket de error
+
+Se agregó una función de Supabase:
+
+- Ruta: `supabase/functions/report-ticket/index.ts`
+- Nombre recomendado de despliegue: `report-ticket`
+
+### Despliegue
+
+```bash
+supabase functions deploy report-ticket
+```
+
+### Variables de entorno (Supabase Functions)
+
+- `RESEND_API_KEY` (requerida)
+- `REPORT_TICKET_FROM_EMAIL` (opcional)
+- `REPORT_TICKET_REPLY_TO` (opcional)
+
+### Variable frontend
+
+Configura en `.env` / Vercel:
+
+```env
+VITE_REPORT_TICKET_FUNCTION_NAME=report-ticket
+```

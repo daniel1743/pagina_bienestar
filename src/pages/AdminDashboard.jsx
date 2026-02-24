@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Settings,
   ShieldCheck,
+  AlertTriangle,
   LogOut,
   Home,
 } from 'lucide-react';
@@ -23,12 +24,14 @@ import CommunityManagementModule from '@/components/admin/CommunityManagementMod
 import GlobalSettingsModule from '@/components/admin/GlobalSettingsModule';
 import SecurityModule from '@/components/admin/SecurityModule';
 import EditorialCalendarModule from '@/components/admin/EditorialCalendarModule';
+import ReportsModule from '@/components/admin/ReportsModule';
 
 const TAB_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'editorial', label: 'Calendario Editorial', icon: CalendarDays },
   { id: 'articles', label: 'CMS Artículos', icon: FileText },
   { id: 'comments', label: 'Comentarios', icon: MessageSquare },
+  { id: 'reports', label: 'Errores / Reportes', icon: AlertTriangle },
   { id: 'users', label: 'Usuarios', icon: Users },
   { id: 'community', label: 'Comunidad', icon: Users },
   { id: 'settings', label: 'Configuración', icon: Settings },
@@ -50,6 +53,8 @@ const AdminDashboard = () => {
         return <EditorialCalendarModule />;
       case 'comments':
         return <CommentManagementModule />;
+      case 'reports':
+        return <ReportsModule />;
       case 'users':
         return <UserManagementModule />;
       case 'community':

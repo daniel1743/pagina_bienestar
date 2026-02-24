@@ -58,7 +58,9 @@ function AppLayout() {
           <Route path="/reportar-error" element={<InfoStubPage />} />
           <Route path="/faq" element={<InfoStubPage />} />
           <Route path="/glosario" element={<InfoStubPage />} />
-          <Route path="/cookies" element={<InfoStubPage />} />
+          <Route path="/cookies" element={<LegalPage />} />
+          <Route path="/seguridad" element={<LegalPage />} />
+          <Route path="/politicas-seguridad" element={<LegalPage />} />
           <Route path="/newsletter" element={<InfoStubPage />} />
           <Route path="/perfil/:id" element={<UserProfilePage />} />
           

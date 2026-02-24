@@ -135,7 +135,8 @@ const DashboardOverviewModule = () => {
       { data: comments, error: commentsError },
       { data: users, error: usersError },
       { data: topics, error: topicsError },
-      reportsResponse,
+      userReportsResponse,
+      errorReportsResponse,
     ] = await Promise.all([
       supabase
         .from('articles')
@@ -158,6 +159,7 @@ const DashboardOverviewModule = () => {
         .order('created_at', { ascending: false })
         .limit(2000),
       supabase.from('reported_users').select('id', { count: 'exact', head: true }),
+      supabase.from('error_reports').select('id', { count: 'exact', head: true }),
     ]);
 
     if (articlesError || commentsError || usersError || topicsError) {
@@ -172,7 +174,7 @@ const DashboardOverviewModule = () => {
     const safeComments = comments || [];
     const safeUsers = users || [];
     const safeTopics = topics || [];
-    const reportsCount = reportsResponse?.count || 0;
+    const reportsCount = (userReportsResponse?.count || 0) + (errorReportsResponse?.count || 0);
 
     const nextMetrics = {
       totalArticles: safeArticles.length,

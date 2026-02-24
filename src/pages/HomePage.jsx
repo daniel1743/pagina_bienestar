@@ -167,7 +167,7 @@ const HomePage = () => {
           <motion.div
             {...revealProps}
             transition={reduceMotion ? { duration: 0 } : { ...fadeUp.transition, delay: 0.08 }}
-            className="pointer-events-none relative hidden h-[380px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] opacity-85 lg:block"
+            className="pointer-events-none relative hidden h-[360px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] opacity-75 lg:block"
           >
             <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-[#34D399]/14" />
             <div className="absolute -bottom-10 left-8 h-40 w-40 rounded-full bg-[#60A5FA]/12" />
@@ -286,7 +286,7 @@ const HomePage = () => {
 
       <section id="autor-confianza" className="border-y border-slate-200 bg-white px-4 py-20 dark:border-border dark:bg-background">
         <motion.div {...revealProps} className="mx-auto grid w-full max-w-[1100px] items-start gap-16 md:grid-cols-[28%_72%]">
-          <figure className="aspect-[3/4] min-h-[360px] max-h-[420px] w-full max-w-[315px] overflow-hidden rounded-[4px] bg-transparent">
+          <figure className="aspect-[3/4] min-h-[360px] max-h-[420px] w-full max-w-[288px] overflow-hidden rounded-[4px] bg-transparent">
             <img
               src="/images/DANIEL_FALCON.jpeg"
               alt="Retrato profesional de Daniel Falcón"
