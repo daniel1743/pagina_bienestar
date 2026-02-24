@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,6 +93,11 @@ const countImages = (node) => !node ? 0 : (node.type === 'image' ? 1 : 0) + (Arr
 const btn = (active = false) => `h-9 min-w-9 px-2 inline-flex items-center justify-center rounded-md border transition ${active ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'}`;
 const escapeHtml = (value) => String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 const seoWebpName = (raw) => `${slugify((raw || '').replace(/\.[^/.]+$/, '')) || 'imagen-editorial'}.webp`;
+const defaultAltFromFileName = (rawName) => {
+  const cleaned = slugify((rawName || '').replace(/\.[^/.]+$/, '')).replace(/-/g, ' ').trim();
+  if (!cleaned) return 'Imagen editorial';
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+};
 const canvasToWebpBlob = (canvas, quality) =>
   new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -214,6 +219,8 @@ const ArticleManagementModule = () => {
   const [internalDisplay, setInternalDisplay] = useState('full');
   const [isOptimizingInternalImage, setIsOptimizingInternalImage] = useState(false);
   const [optimizedInternalInfo, setOptimizedInternalInfo] = useState(null);
+  const quickImageInputRef = useRef(null);
+  const lastSelectionRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -224,6 +231,12 @@ const ArticleManagementModule = () => {
     ],
     content: form.content,
     onUpdate: ({ editor: ed }) => setForm((p) => ({ ...p, content: ed.getHTML() })),
+    onCreate: ({ editor: ed }) => {
+      lastSelectionRef.current = ed.state.selection.from;
+    },
+    onSelectionUpdate: ({ editor: ed }) => {
+      lastSelectionRef.current = ed.state.selection.from;
+    },
   });
 
   const loadData = async () => {
@@ -317,38 +330,130 @@ const ArticleManagementModule = () => {
     setLinkDraft((p) => ({ ...p, url: '' }));
   };
 
+  const rememberEditorSelection = () => {
+    if (!editor) return;
+    lastSelectionRef.current = editor.state.selection.from;
+  };
+
+  const editorChainAtLastSelection = () => {
+    if (!editor) return null;
+    const docSize = editor.state.doc.content.size;
+    const rawPos =
+      typeof lastSelectionRef.current === 'number'
+        ? lastSelectionRef.current
+        : editor.state.selection.from;
+    const safePos = Math.max(1, Math.min(rawPos || 1, Math.max(1, docSize)));
+    return editor.chain().focus().setTextSelection(safePos);
+  };
+
+  const optimizeInternalImageFile = async (file, options = {}) => {
+    const { showServerFallbackToast = true } = options;
+    let optimizedResult = null;
+    try {
+      optimizedResult = await optimizeToWebpWithEdgeFunction(file);
+    } catch (serverError) {
+      optimizedResult = null;
+      if (showServerFallbackToast) {
+        toast({
+          title: 'Optimizador servidor no disponible',
+          description: `${serverError.message} Se usará optimización local.`,
+        });
+      }
+    }
+
+    if (!optimizedResult) {
+      const optimized = await optimizeToEditorialWebp(file);
+      const optimizedFile = new File([optimized.blob], seoWebpName(file.name), {
+        type: 'image/webp',
+        lastModified: Date.now(),
+      });
+      optimizedResult = {
+        file: optimizedFile,
+        bytes: optimized.blob.size,
+        width: optimized.width,
+        height: optimized.height,
+        quality: optimized.quality,
+        mode: 'client',
+      };
+    }
+
+    return optimizedResult;
+  };
+
+  const insertImageInEditor = async (options = {}) => {
+    const {
+      imageFile,
+      alt,
+      caption = '',
+      displayMode = 'full',
+      width = null,
+      height = null,
+      successMessage = 'Imagen insertada',
+      silentSuccess = false,
+    } = options;
+
+    if (!editor || !imageFile) {
+      toast({ title: 'Selecciona una imagen', variant: 'destructive' });
+      return false;
+    }
+    if (countImages(editor.getJSON()) >= MAX_IMAGES) {
+      toast({ title: `Máximo ${MAX_IMAGES} imágenes por artículo`, variant: 'destructive' });
+      return false;
+    }
+    if (imageFile.size > MAX_IMAGE_BYTES) {
+      toast({ title: 'Imagen excede 300KB', variant: 'destructive' });
+      return false;
+    }
+
+    const finalAlt = (alt || '').trim() || defaultAltFromFileName(imageFile.name);
+    const seoNameSource = finalAlt || caption.trim() || imageFile.name;
+    const renamedFile = new File([imageFile], seoWebpName(seoNameSource), {
+      type: 'image/webp',
+      lastModified: Date.now(),
+    });
+    const lower = renamedFile.name.toLowerCase();
+    if (!WEBP_NAME.test(lower)) {
+      toast({
+        title: 'Nombre inválido',
+        description: 'Usa formato palabras-clave-separadas-por-guiones.webp',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    const src = await toDataUrl(renamedFile);
+    const display = displayMode === 'caption' ? 'center' : displayMode;
+    const chain = editorChainAtLastSelection();
+    if (!chain) return false;
+    chain
+      .setImage({
+        src,
+        alt: finalAlt,
+        title: caption.trim() || finalAlt,
+        display,
+        width: width || null,
+        height: height || null,
+      })
+      .run();
+
+    if (displayMode === 'caption') {
+      editor.chain().focus().insertContent(`<p><em>${escapeHtml(caption.trim() || finalAlt)}</em></p>`).run();
+    }
+
+    const next = [{ id: `${Date.now()}`, url: src, alt: finalAlt, name: renamedFile.name }, ...mediaLibrary].slice(0, 120);
+    setMediaLibrary(next);
+    saveMediaLibrary(next);
+    if (!silentSuccess) toast({ title: successMessage });
+    return true;
+  };
+
   const onInternalFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsOptimizingInternalImage(true);
     setOptimizedInternalInfo(null);
     try {
-      let optimizedResult = null;
-      try {
-        optimizedResult = await optimizeToWebpWithEdgeFunction(file);
-      } catch (serverError) {
-        optimizedResult = null;
-        toast({
-          title: 'Optimizador servidor no disponible',
-          description: `${serverError.message} Se usará optimización local.`,
-        });
-      }
-
-      if (!optimizedResult) {
-        const optimized = await optimizeToEditorialWebp(file);
-        const optimizedFile = new File([optimized.blob], seoWebpName(file.name), {
-          type: 'image/webp',
-          lastModified: Date.now(),
-        });
-        optimizedResult = {
-          file: optimizedFile,
-          bytes: optimized.blob.size,
-          width: optimized.width,
-          height: optimized.height,
-          quality: optimized.quality,
-          mode: 'client',
-        };
-      }
+      const optimizedResult = await optimizeInternalImageFile(file, { showServerFallbackToast: true });
 
       const previewUrl = URL.createObjectURL(optimizedResult.file);
       setInternalPreview((prev) => {
@@ -356,6 +461,7 @@ const ArticleManagementModule = () => {
         return previewUrl;
       });
       setInternalFile(optimizedResult.file);
+      if (!internalAlt.trim()) setInternalAlt(defaultAltFromFileName(file.name));
       setOptimizedInternalInfo({
         bytes: optimizedResult.bytes,
         width: optimizedResult.width,
@@ -379,31 +485,57 @@ const ArticleManagementModule = () => {
       e.target.value = '';
     }
   };
+
+  const onQuickInternalFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsOptimizingInternalImage(true);
+    try {
+      const optimizedResult = await optimizeInternalImageFile(file, { showServerFallbackToast: false });
+      const inserted = await insertImageInEditor({
+        imageFile: optimizedResult.file,
+        alt: defaultAltFromFileName(file.name),
+        caption: '',
+        displayMode: 'full',
+        width: optimizedResult.width,
+        height: optimizedResult.height,
+        successMessage: 'Imagen insertada en la posición del cursor',
+      });
+      if (!inserted) return;
+      setOptimizedInternalInfo({
+        bytes: optimizedResult.bytes,
+        width: optimizedResult.width,
+        height: optimizedResult.height,
+        quality: optimizedResult.quality,
+        mode: optimizedResult.mode,
+      });
+    } catch (error) {
+      toast({
+        title: 'No se pudo insertar la imagen',
+        description: error.message || 'Intenta con otra imagen o menor resolución.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsOptimizingInternalImage(false);
+      e.target.value = '';
+    }
+  };
+
   const insertInternalImage = async () => {
-    if (!editor || !internalFile) { toast({ title: 'Selecciona una imagen', variant: 'destructive' }); return; }
-    if (!internalAlt.trim()) { toast({ title: 'ALT obligatorio', variant: 'destructive' }); return; }
-    if (countImages(editor.getJSON()) >= MAX_IMAGES) { toast({ title: `Máximo ${MAX_IMAGES} imágenes por artículo`, variant: 'destructive' }); return; }
-    if (internalFile.size > MAX_IMAGE_BYTES) { toast({ title: 'Imagen excede 300KB', variant: 'destructive' }); return; }
-    const seoNameSource = internalAlt.trim() || internalCaption.trim() || internalFile.name;
-    const renamedFile = new File([internalFile], seoWebpName(seoNameSource), {
-      type: 'image/webp',
-      lastModified: Date.now(),
-    });
-    const lower = renamedFile.name.toLowerCase();
-    if (!WEBP_NAME.test(lower)) { toast({ title: 'Nombre inválido', description: 'Usa formato palabras-clave-separadas-por-guiones.webp', variant: 'destructive' }); return; }
-    const src = await toDataUrl(renamedFile);
-    const display = internalDisplay === 'caption' ? 'center' : internalDisplay;
-    editor.chain().focus().setImage({
-      src,
-      alt: internalAlt.trim(),
-      title: internalCaption.trim() || internalAlt.trim(),
-      display,
+    if (!internalFile) {
+      toast({ title: 'Selecciona una imagen', variant: 'destructive' });
+      return;
+    }
+    const inserted = await insertImageInEditor({
+      imageFile: internalFile,
+      alt: internalAlt.trim() || defaultAltFromFileName(internalFile.name),
+      caption: internalCaption.trim(),
+      displayMode: internalDisplay,
       width: optimizedInternalInfo?.width || null,
       height: optimizedInternalInfo?.height || null,
-    }).run();
-    if (internalDisplay === 'caption') editor.chain().focus().insertContent(`<p><em>${escapeHtml(internalCaption.trim() || internalAlt.trim())}</em></p>`).run();
-    const next = [{ id: `${Date.now()}`, url: src, alt: internalAlt.trim(), name: renamedFile.name }, ...mediaLibrary].slice(0, 120);
-    setMediaLibrary(next); saveMediaLibrary(next); clearInternalImageDraft(); toast({ title: 'Imagen insertada' });
+    });
+    if (!inserted) return;
+    clearInternalImageDraft();
   };
 
   return (
@@ -476,7 +608,7 @@ const ArticleManagementModule = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div><Label>Subida desde panel</Label><Input type="file" accept="image/*" onChange={onInternalFile} disabled={isOptimizingInternalImage} /></div>
                   <div><Label>Posicionamiento</Label><select value={internalDisplay} onChange={(e) => setInternalDisplay(e.target.value)} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100"><option value="full">Ancho completo</option><option value="center">Centrada</option><option value="caption">Con caption</option></select></div>
-                  <div><Label>ALT obligatorio</Label><Input value={internalAlt} onChange={(e) => setInternalAlt(e.target.value)} placeholder="Descripción con valor explicativo" /></div>
+                  <div><Label>ALT recomendado</Label><Input value={internalAlt} onChange={(e) => setInternalAlt(e.target.value)} placeholder="Se completa automáticamente si lo dejas vacío" /></div>
                   <div><Label>Descripción opcional</Label><Input value={internalCaption} onChange={(e) => setInternalCaption(e.target.value)} placeholder="Caption breve" /></div>
                 </div>
                 {isOptimizingInternalImage ? <p className="text-xs text-emerald-300">Optimizando imagen a WebP...</p> : null}
@@ -520,6 +652,13 @@ const ArticleManagementModule = () => {
               </div>
 
               <div className="sticky top-2 z-20 rounded-xl border border-slate-700 bg-slate-950/95 backdrop-blur">
+                <input
+                  ref={quickImageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onQuickInternalFile}
+                  className="hidden"
+                />
                 <div className="p-2 flex flex-wrap gap-2 items-center border-b border-slate-800">
                   <button type="button" title="Insertar H2" className={btn(false)} onClick={() => editor?.chain().focus().insertContent('<h2>Nuevo subtítulo</h2><p></p>').run()}><Heading2 className="w-4 h-4" /></button>
                   <button type="button" title="H2" className={btn(editor?.isActive('heading', { level: 2 }))} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="w-4 h-4" /></button>
@@ -540,7 +679,7 @@ const ArticleManagementModule = () => {
                   <button type="button" title="Separador" className={btn(false)} onClick={() => editor?.chain().focus().setHorizontalRule().run()}><Minus className="w-4 h-4" /></button>
                   <button type="button" title="Bloque resumen" className={btn(false)} onClick={() => editor?.chain().focus().insertEditorialSummary().run()}><ListChecks className="w-4 h-4" /></button>
                   <button type="button" title="Bloque advertencia" className={btn(false)} onClick={() => editor?.chain().focus().insertEditorialWarning().run()}><AlertTriangle className="w-4 h-4" /></button>
-                  <button type="button" title="Insertar imagen" className={btn(false)} onClick={() => document.getElementById('internal-image-panel')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}><ImagePlus className="w-4 h-4" /></button>
+                  <button type="button" title="Insertar imagen rápida" className={btn(false)} onMouseDown={rememberEditorSelection} onClick={() => quickImageInputRef.current?.click()}><ImagePlus className="w-4 h-4" /></button>
                 </div>
                 <div className="p-2 flex flex-wrap gap-2 items-center">
                   <div className="flex-1 min-w-[220px]"><Input value={linkDraft.url} onChange={(e) => setLinkDraft((p) => ({ ...p, url: e.target.value }))} placeholder="Enlace interno o externo" /></div>
@@ -550,7 +689,16 @@ const ArticleManagementModule = () => {
                 </div>
               </div>
 
-              <div className="min-h-[320px] rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-slate-100"><EditorContent editor={editor} className="editorial-editor" /></div>
+              <div className="min-h-[320px] rounded-lg border border-slate-700 bg-slate-950/60 p-4 text-slate-100">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2">
+                  <p className="text-xs text-slate-300">Inserta imagen exactamente donde dejaste el cursor.</p>
+                  <Button variant="outline" size="sm" onMouseDown={rememberEditorSelection} onClick={() => quickImageInputRef.current?.click()} disabled={isOptimizingInternalImage}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {isOptimizingInternalImage ? 'Optimizando...' : 'Insertar imagen aquí'}
+                  </Button>
+                </div>
+                <EditorContent editor={editor} className="editorial-editor" />
+              </div>
             </CardContent>
           </Card>
 

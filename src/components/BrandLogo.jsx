@@ -31,10 +31,21 @@ const BrandLogo = ({ className, compact = false }) => {
       )}
 
       <div className="leading-none">
-        <p className={cn('font-semibold tracking-tight text-foreground text-[1.9rem]', compact && 'text-[1.1rem]')}>
-          <span className="text-primary">Bienestar</span>{' '}
-          <span className="font-medium text-foreground/85">en Claro</span>
-        </p>
+        {compact ? (
+          <div className="flex flex-col">
+            <span className="text-[1.12rem] font-semibold leading-[1.05] tracking-tight text-primary">
+              Bienestar
+            </span>
+            <span className="mt-0.5 text-[0.82rem] font-medium leading-none text-foreground/85">
+              en Claro
+            </span>
+          </div>
+        ) : (
+          <p className="text-[1.9rem] font-semibold tracking-tight text-foreground">
+            <span className="text-primary">Bienestar</span>{' '}
+            <span className="font-medium text-foreground/85">en Claro</span>
+          </p>
+        )}
       </div>
     </div>
   );

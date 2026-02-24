@@ -187,3 +187,122 @@
   border: 0;
   border-top: 1px solid #cbd5e1;
 }
+
+/* ================================
+   NAVBAR EDITORIAL (AUTORIDAD)
+================================ */
+:root {
+  --nav-bg: #ffffff;
+  --nav-border: rgba(15, 23, 42, 0.08);
+  --nav-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  --nav-text: #0f172a;
+  --nav-text-muted: #334155;
+  --nav-hover: #065f46;
+  --nav-active: #047857;
+  --nav-focus: rgba(4, 120, 87, 0.22);
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  transform: translateZ(0);
+  will-change: transform;
+  transition: box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.navbar.nav--scrolled {
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+  box-shadow: var(--nav-shadow);
+}
+
+.navbar a,
+.navbar button {
+  color: var(--nav-text-muted);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.navbar a:hover,
+.navbar button:hover {
+  color: var(--nav-text);
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.navbar a[aria-current='page'],
+.navbar .is-active {
+  color: var(--nav-active);
+  background: rgba(4, 120, 87, 0.08);
+}
+
+.navbar .nav-brand,
+.navbar .nav-brand:hover,
+.navbar .nav-brand:focus-visible {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  outline: none;
+}
+
+.navbar a:focus-visible,
+.navbar button:focus-visible {
+  outline: 2px solid var(--nav-focus);
+  outline-offset: 2px;
+}
+
+.navbar .nav-secondary {
+  color: var(--nav-text-muted);
+}
+
+.navbar .nav-cta {
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 600;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+}
+
+.navbar .nav-cta:hover {
+  background: #111c33;
+  color: #ffffff;
+}
+
+.dark .navbar {
+  background: #0b1220;
+  border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+.dark .navbar.nav--scrolled {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.dark .navbar a,
+.dark .navbar button {
+  color: rgba(226, 232, 240, 0.86);
+}
+
+.dark .navbar a:hover,
+.dark .navbar button:hover {
+  color: #ffffff;
+  background: rgba(226, 232, 240, 0.06);
+}
+
+.dark .navbar a[aria-current='page'],
+.dark .navbar .is-active {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.dark .navbar .nav-cta {
+  background: #ffffff;
+  color: #0b1220;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.navbar.nav--transparent {
+  background: var(--nav-bg) !important;
+}

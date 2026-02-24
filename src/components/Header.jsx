@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, NavLink } from 'react-router-dom';
 import { Menu, X, Sun, Moon, User } from 'lucide-react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Button } from '@/components/ui/button';
 import BrandLogo from '@/components/BrandLogo';
 import NotificationCenter from './NotificationCenter';
 
@@ -12,6 +11,7 @@ const Header = () => {
   const { currentUser, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const menuItems = [
     { name: 'Home', path: '/' },
@@ -21,22 +21,43 @@ const Header = () => {
     { name: 'Sobre mí', path: '/sobre-mi' },
   ];
 
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 8);
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 shadow-sm transition-colors duration-200 md:bg-background/80 md:backdrop-blur-sm">
+    <header className={`navbar ${isScrolled ? 'nav--scrolled' : ''}`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="nav-brand flex items-center">
           <BrandLogo compact />
         </Link>
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-6">
-          {menuItems.map(item => (
-            <Link key={item.name} to={item.path} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              className={({ isActive }) =>
+                `${isActive ? 'is-active' : ''} text-sm`
+              }
+            >
               {item.name}
-            </Link>
+            </NavLink>
           ))}
           
-          <button onClick={toggleTheme} className="text-muted-foreground hover:text-primary transition-colors p-2 rounded-full hover:bg-muted">
+          <button onClick={toggleTheme} className="inline-flex items-center justify-center">
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
 
@@ -45,19 +66,25 @@ const Header = () => {
               <div className="flex items-center gap-3">
                 <NotificationCenter />
                 {currentUser.email === 'falcondaniel37@gmail.com' && (
-                  <Link to="/admin" className="text-sm font-medium text-primary hover:opacity-80">Admin</Link>
+                  <NavLink to="/admin" className={({ isActive }) => `${isActive ? 'is-active' : ''} text-sm`}>
+                    Admin
+                  </NavLink>
                 )}
-                <Button variant="ghost" size="icon" className="rounded-full" asChild>
-                  <Link to={`/perfil/${currentUser.id}`}>
-                    <User className="w-5 h-5" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="sm" onClick={signOut}>Salir</Button>
+                <Link to={`/perfil/${currentUser.id}`} className="inline-flex items-center justify-center" aria-label="Mi perfil">
+                  <User className="w-5 h-5" />
+                </Link>
+                <button type="button" onClick={signOut} className="nav-secondary text-sm">
+                  Salir
+                </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" asChild><Link to="/login">Iniciar sesión</Link></Button>
-                <Button size="sm" className="bg-primary text-primary-foreground hover:opacity-90" asChild><Link to="/login?signup=true">Registrarse</Link></Button>
+                <NavLink to="/login" className={({ isActive }) => `nav-secondary text-sm ${isActive ? 'is-active' : ''}`}>
+                  Iniciar sesión
+                </NavLink>
+                <NavLink to="/login?signup=true" className="nav-cta text-sm">
+                  Registrarse
+                </NavLink>
               </div>
             )}
           </div>
@@ -66,10 +93,10 @@ const Header = () => {
         {/* Mobile Toggle */}
         <div className="md:hidden flex items-center gap-2">
           {currentUser && <NotificationCenter />}
-          <button onClick={toggleTheme} className="text-muted-foreground p-2">
+          <button onClick={toggleTheme} className="inline-flex items-center justify-center">
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-          <button className="p-2 text-foreground" onClick={() => setIsOpen(!isOpen)}>
+          <button className="inline-flex items-center justify-center" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X /> : <Menu />}
           </button>
         </div>
@@ -77,25 +104,42 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-background border-b border-border px-4 py-4 space-y-4 shadow-lg">
-          {menuItems.map(item => (
-            <Link key={item.name} to={item.path} onClick={() => setIsOpen(false)} className="block text-sm font-medium text-muted-foreground hover:text-primary">
+        <div className="md:hidden bg-background border-b border-border px-4 py-4 space-y-4">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                `block text-sm ${isActive ? 'is-active' : ''}`
+              }
+            >
               {item.name}
-            </Link>
+            </NavLink>
           ))}
           <div className="pt-4 border-t border-border flex flex-col gap-3">
             {currentUser ? (
               <>
-                <Link to={`/perfil/${currentUser.id}`} onClick={() => setIsOpen(false)} className="text-sm font-medium text-foreground">Mi Perfil</Link>
+                <Link to={`/perfil/${currentUser.id}`} onClick={() => setIsOpen(false)} className="text-sm">
+                  Mi Perfil
+                </Link>
                 {currentUser.email === 'falcondaniel37@gmail.com' && (
-                  <Link to="/admin" onClick={() => setIsOpen(false)} className="text-sm font-medium text-primary">Admin Dashboard</Link>
+                  <Link to="/admin" onClick={() => setIsOpen(false)} className="text-sm">
+                    Admin Dashboard
+                  </Link>
                 )}
-                <button onClick={() => { signOut(); setIsOpen(false); }} className="text-left text-sm font-medium text-foreground">Cerrar Sesión</button>
+                <button onClick={() => { signOut(); setIsOpen(false); }} className="text-left text-sm">
+                  Cerrar Sesión
+                </button>
               </>
             ) : (
               <>
-                <Link to="/login" onClick={() => setIsOpen(false)} className="text-sm font-medium text-foreground">Iniciar sesión</Link>
-                <Link to="/login?signup=true" onClick={() => setIsOpen(false)} className="text-sm font-medium text-primary">Registrarse</Link>
+                <Link to="/login" onClick={() => setIsOpen(false)} className="text-sm">
+                  Iniciar sesión
+                </Link>
+                <Link to="/login?signup=true" onClick={() => setIsOpen(false)} className="nav-cta text-sm text-center">
+                  Registrarse
+                </Link>
               </>
             )}
           </div>

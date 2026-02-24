@@ -14,7 +14,7 @@ const contentMap = {
     title: 'Sobre Mí', 
     content: `
       <div class="flex flex-col md:flex-row gap-8 mb-8">
-        <img src="https://images.unsplash.com/photo-1637059824899-a441006a6875" alt="Daniel Falcón" class="w-48 h-48 rounded-full object-cover" />
+        <img src="/images/DANIEL_FALCON.jpeg" alt="Daniel Falcón" class="w-44 h-64 md:w-52 md:h-72 rounded-2xl object-cover border border-slate-200 shadow-sm transition-transform duration-500 hover:scale-[1.02]" />
         <div>
           <p class="text-lg">Soy Daniel Falcón, divulgador en bienestar y salud metabólica. Creo firmemente que la educación clara es una herramienta clave para tomar mejores decisiones.</p>
           <br/>

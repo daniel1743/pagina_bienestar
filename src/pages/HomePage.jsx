@@ -286,15 +286,17 @@ const HomePage = () => {
 
       <section id="autor-confianza" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
         <motion.div {...revealProps} className="mx-auto flex w-full max-w-[1100px] flex-col items-start gap-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-border dark:bg-card md:flex-row md:items-center">
-          <img
-            src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80&fm=webp"
-            alt="Retrato profesional de Daniel Falcón"
-            className="h-32 w-32 rounded-2xl object-cover md:h-36 md:w-36"
-            width={240}
-            height={240}
-            loading="lazy"
-            decoding="async"
-          />
+          <figure className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm dark:border-border dark:bg-muted">
+            <img
+              src="/images/DANIEL_FALCON.jpeg"
+              alt="Retrato profesional de Daniel Falcón"
+              className="h-64 w-44 object-cover transition-transform duration-500 group-hover:scale-[1.03] md:h-72 md:w-52"
+              width={416}
+              height={624}
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
           <div className="max-w-[780px] space-y-4">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground">Quién está detrás</h2>
             <p className="text-lg font-semibold text-[#1d4e89] dark:text-primary">
