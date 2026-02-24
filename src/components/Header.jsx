@@ -38,8 +38,8 @@ const Header = () => {
 
   return (
     <header className={`navbar ${isScrolled ? 'nav--scrolled' : ''}`}>
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="nav-brand flex items-center">
+      <div className="container mx-auto px-4 h-[72px] flex items-center justify-between">
+        <Link to="/" className="nav-brand flex items-center -translate-y-[2px]">
           <BrandLogo compact />
         </Link>
 

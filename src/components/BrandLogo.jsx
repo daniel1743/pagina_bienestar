@@ -10,11 +10,15 @@ const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 
   const descriptorClasses = isInverse ? 'text-[#7ed9bd]' : 'text-[#1E6F5C] dark:text-[#7ed9bd]';
 
   return (
-    <div className={cn('flex items-center gap-3', className)}>
-      <div className={cn('inline-flex h-9 w-9 items-center justify-center rounded-lg', monogramClasses)}>
+    <div className={cn('flex items-center gap-[18px]', className)}>
+      <div className={cn('inline-flex h-11 w-11 items-center justify-center rounded-[8px] p-[10px]', monogramClasses)}>
         <span
-          className="translate-y-[1px] font-bold tracking-[0.02em]"
-          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: compact ? '1rem' : '1.08rem' }}
+          className="translate-y-[1px] font-semibold"
+          style={{
+            fontFamily: "'Cormorant Garamond', Georgia, serif",
+            fontSize: compact ? '1rem' : '1.08rem',
+            letterSpacing: '-0.5px',
+          }}
         >
           BC
         </span>
@@ -24,14 +28,14 @@ const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 
         {compact ? (
           <div className="flex flex-col">
             <span
-              className={cn('text-[1.14rem] font-semibold leading-[1.03] tracking-[0.01em]', primaryTextClasses)}
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              className={cn('text-[1.14rem] font-semibold leading-[1.03]', primaryTextClasses)}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: '-0.3px' }}
             >
               Bienestar
             </span>
             <span
-              className={cn('mt-0.5 text-[0.8rem] font-medium leading-none', secondaryTextClasses)}
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              className={cn('mt-0.5 font-normal leading-none', secondaryTextClasses)}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '0.92em', letterSpacing: '0px' }}
             >
               en Claro
             </span>
@@ -39,10 +43,16 @@ const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 
         ) : (
           <div className="space-y-1">
             <p
-              className={cn('text-[1.9rem] font-semibold tracking-[0.01em]', primaryTextClasses)}
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              className={cn('text-[1.9rem] font-semibold', primaryTextClasses)}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", letterSpacing: '-0.3px' }}
             >
-              Bienestar <span className={cn('font-medium', secondaryTextClasses)}>en Claro</span>
+              Bienestar{' '}
+              <span
+                className={cn('font-normal', secondaryTextClasses)}
+                style={{ fontSize: '0.92em', letterSpacing: '0px' }}
+              >
+                en Claro
+              </span>
             </p>
             {showDescriptor ? (
               <p

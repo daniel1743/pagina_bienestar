@@ -284,45 +284,57 @@ const HomePage = () => {
         </motion.div>
       </section>
 
-      <section id="autor-confianza" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
-        <motion.div {...revealProps} className="mx-auto flex w-full max-w-[1100px] flex-col items-start gap-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-border dark:bg-card md:flex-row md:items-center">
-          <figure className="group overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-sm dark:border-border dark:bg-muted">
+      <section id="autor-confianza" className="border-y border-slate-200 bg-white px-4 py-20 dark:border-border dark:bg-background">
+        <motion.div {...revealProps} className="mx-auto grid w-full max-w-[1100px] items-start gap-16 md:grid-cols-[28%_72%]">
+          <figure className="aspect-[3/4] min-h-[360px] max-h-[420px] w-full max-w-[315px] overflow-hidden rounded-[4px] bg-transparent">
             <img
               src="/images/DANIEL_FALCON.jpeg"
               alt="Retrato profesional de Daniel Falcón"
-              className="h-64 w-44 object-cover transition-transform duration-500 group-hover:scale-[1.03] md:h-72 md:w-52"
+              className="h-full w-full object-cover"
+              style={{ objectPosition: '50% 30%' }}
               width={416}
               height={624}
               loading="lazy"
               decoding="async"
             />
           </figure>
-          <div className="max-w-[780px] space-y-4">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground">Quién está detrás</h2>
-            <p className="text-lg font-semibold text-[#1d4e89] dark:text-primary">
+
+          <div className="max-w-[65ch] space-y-5">
+            <h2 className="text-3xl font-semibold uppercase tracking-[0.04em] text-[#0B1F3B] dark:text-foreground md:text-[2.4rem]">
+              Quién está detrás
+            </h2>
+            <p className="text-[1.45rem] font-semibold leading-tight text-[#0B1F3B] dark:text-foreground">
               Daniel Falcón
-              <span className="block text-base font-medium text-slate-700 dark:text-muted-foreground">
-                Divulgador en bienestar y salud metabólica (basado en evidencia)
-              </span>
             </p>
-            <p className="leading-7 text-slate-700 dark:text-muted-foreground">
+            <p className="text-[1.05rem] font-normal text-slate-700 dark:text-muted-foreground">
+              Divulgador en bienestar y salud metabólica con enfoque editorial basado en evidencia.
+            </p>
+
+            <p className="text-[1.02rem] leading-[1.7] text-slate-700 dark:text-muted-foreground">
               {globalSettings.founderBio ||
                 'Traduzco información de salud y bienestar desde fuentes confiables a lenguaje claro y accionable. Este sitio es educativo y no reemplaza evaluación profesional.'}
             </p>
-            <ul className="grid gap-2 text-sm text-slate-700 dark:text-muted-foreground sm:grid-cols-3">
-              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-background">
-                Explicación clara y estructurada
-              </li>
-              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-background">
-                Fuentes y límites explícitos
-              </li>
-              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-background">
-                Cero sensacionalismo
-              </li>
+            <p className="text-[1.02rem] leading-[1.7] text-slate-700 dark:text-muted-foreground">
+              El foco editorial es ofrecer contexto útil para comprender diagnósticos frecuentes, ordenar
+              preguntas clínicas y evitar interpretaciones alarmistas.
+            </p>
+            <p className="text-[1.02rem] leading-[1.7] text-slate-700 dark:text-muted-foreground">
+              Cada contenido prioriza claridad, límites explícitos y utilidad práctica para audiencia
+              latinoamericana.
+            </p>
+
+            <ul className="space-y-2 text-[1rem] leading-[1.7] text-slate-700 dark:text-muted-foreground">
+              <li>• Explicación clara y estructurada.</li>
+              <li>• Fuentes y límites explícitos.</li>
+              <li>• Cero sensacionalismo.</li>
             </ul>
-            <Button asChild variant="outline" className="rounded-2xl border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-border dark:text-foreground">
-              <Link to="/sobre-mi">Conoce mi enfoque</Link>
-            </Button>
+
+            <Link
+              to="/sobre-mi"
+              className="inline-flex text-[1rem] font-medium text-[#0B1F3B] transition-colors hover:text-[#1E6F5C] dark:text-foreground dark:hover:text-primary"
+            >
+              Conoce el enfoque completo →
+            </Link>
           </div>
         </motion.div>
       </section>
