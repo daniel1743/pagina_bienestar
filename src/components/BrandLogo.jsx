@@ -1,50 +1,58 @@
-import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-const BrandLogo = ({ className, compact = false }) => {
-  const [imageError, setImageError] = useState(false);
+const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 'default' }) => {
+  const isInverse = tone === 'inverse';
+  const monogramClasses = isInverse
+    ? 'bg-white text-[#0B1F3B]'
+    : 'bg-[#0B1F3B] text-[#F8F9FA] dark:bg-white dark:text-[#0B1F3B]';
+  const primaryTextClasses = isInverse ? 'text-white' : 'text-[#0B1F3B] dark:text-white';
+  const secondaryTextClasses = isInverse ? 'text-white/80' : 'text-[#334155] dark:text-white/80';
+  const descriptorClasses = isInverse ? 'text-[#7ed9bd]' : 'text-[#1E6F5C] dark:text-[#7ed9bd]';
 
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      {!imageError ? (
-        <img
-          src="/images/logo.png"
-          alt="Logo Bienestar en Claro"
-          className={cn(
-            'rounded-lg object-contain',
-            compact ? 'h-8 w-8' : 'h-10 w-10',
-          )}
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <div className="relative h-9 w-9 rounded-lg border border-emerald-500/30 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 shadow-sm shadow-emerald-500/10">
-          <span className="absolute left-[7px] top-1/2 -translate-y-1/2 text-[11px] font-bold text-emerald-600">
-            {'<'}
-          </span>
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[48%] text-[10px] font-semibold text-slate-500">
-            /
-          </span>
-          <span className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[11px] font-bold text-emerald-600">
-            {'>'}
-          </span>
-        </div>
-      )}
+    <div className={cn('flex items-center gap-3', className)}>
+      <div className={cn('inline-flex h-9 w-9 items-center justify-center rounded-lg', monogramClasses)}>
+        <span
+          className="translate-y-[1px] font-bold tracking-[0.02em]"
+          style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: compact ? '1rem' : '1.08rem' }}
+        >
+          BC
+        </span>
+      </div>
 
       <div className="leading-none">
         {compact ? (
           <div className="flex flex-col">
-            <span className="text-[1.12rem] font-semibold leading-[1.05] tracking-tight text-primary">
+            <span
+              className={cn('text-[1.14rem] font-semibold leading-[1.03] tracking-[0.01em]', primaryTextClasses)}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
               Bienestar
             </span>
-            <span className="mt-0.5 text-[0.82rem] font-medium leading-none text-foreground/85">
+            <span
+              className={cn('mt-0.5 text-[0.8rem] font-medium leading-none', secondaryTextClasses)}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
               en Claro
             </span>
           </div>
         ) : (
-          <p className="text-[1.9rem] font-semibold tracking-tight text-foreground">
-            <span className="text-primary">Bienestar</span>{' '}
-            <span className="font-medium text-foreground/85">en Claro</span>
-          </p>
+          <div className="space-y-1">
+            <p
+              className={cn('text-[1.9rem] font-semibold tracking-[0.01em]', primaryTextClasses)}
+              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+            >
+              Bienestar <span className={cn('font-medium', secondaryTextClasses)}>en Claro</span>
+            </p>
+            {showDescriptor ? (
+              <p
+                className={cn('text-[0.74rem] uppercase tracking-[0.08em]', descriptorClasses)}
+                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+              >
+                Plataforma editorial en salud metabólica
+              </p>
+            ) : null}
+          </div>
         )}
       </div>
     </div>

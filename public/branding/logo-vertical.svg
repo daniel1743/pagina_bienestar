@@ -1,0 +1,50 @@
+<svg width="520" height="620" viewBox="0 0 520 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="116" y="40" width="288" height="288" rx="28" fill="#0B1F3B"/>
+  <text
+    x="260"
+    y="208"
+    text-anchor="middle"
+    fill="#F8F9FA"
+    font-family="'Cormorant Garamond', Georgia, serif"
+    font-size="142"
+    font-weight="700"
+    letter-spacing="2"
+  >
+    BC
+  </text>
+  <text
+    x="260"
+    y="438"
+    text-anchor="middle"
+    fill="#0B1F3B"
+    font-family="'Cormorant Garamond', Georgia, serif"
+    font-size="82"
+    font-weight="700"
+    letter-spacing="0.6"
+  >
+    Bienestar
+  </text>
+  <text
+    x="260"
+    y="498"
+    text-anchor="middle"
+    fill="#0B1F3B"
+    font-family="'Cormorant Garamond', Georgia, serif"
+    font-size="56"
+    font-weight="500"
+  >
+    en Claro
+  </text>
+  <text
+    x="260"
+    y="555"
+    text-anchor="middle"
+    fill="#1E6F5C"
+    font-family="'Cormorant Garamond', Georgia, serif"
+    font-size="24"
+    font-weight="600"
+    letter-spacing="0.7"
+  >
+    Plataforma editorial en salud metabólica
+  </text>
+</svg>

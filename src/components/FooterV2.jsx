@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import BrandLogo from '@/components/BrandLogo';
 
 const quickLinks = [
   { label: 'Conoce el enfoque', to: '/sobre-mi' },
@@ -151,16 +152,7 @@ const FooterV2 = ({ showAffiliateDisclosure = false }) => {
       <div className="mx-auto w-full max-w-[1100px]">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-5 lg:col-span-1">
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/logo.png"
-                alt="Logo Bienestar en Claro"
-                className="h-10 w-10 rounded-lg object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-              <h3 className="text-lg font-semibold tracking-tight text-white/90">Bienestar en Claro</h3>
-            </div>
+            <BrandLogo showDescriptor tone="inverse" />
 
             <p className="text-sm leading-6 text-white/70">
               Divulgación editorial sobre salud metabólica con claridad, límites explícitos y enfoque
