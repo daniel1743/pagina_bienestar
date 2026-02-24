@@ -22,6 +22,7 @@ import LegalPage from './pages/LegalPage';
 import GetStartedPage from './pages/GetStartedPage';
 import UserProfilePage from './pages/UserProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
+import EditorialStubPage from './pages/EditorialStubPage';
 
 function AppLayout() {
   const location = useLocation();
@@ -42,14 +43,19 @@ function AppLayout() {
           <Route path="/articulos/:slug" element={<ArticleDetailPage />} />
           <Route path="/comunidad" element={<CommunityPage />} />
           <Route path="/empieza-aqui" element={<GetStartedPage />} />
+          <Route path="/empieza-aqui/:slug" element={<EditorialStubPage />} />
+          <Route path="/guias/:slug" element={<EditorialStubPage />} />
+          <Route path="/categorias/:slug" element={<EditorialStubPage />} />
           <Route path="/perfil/:id" element={<UserProfilePage />} />
           
           {/* Static Pages via LegalPage component */}
           <Route path="/sobre-mi" element={<LegalPage />} />
           <Route path="/legal/:page" element={<LegalPage />} />
           <Route path="/politica-privacidad" element={<LegalPage />} />
+          <Route path="/privacidad" element={<LegalPage />} />
           <Route path="/terminos" element={<LegalPage />} />
           <Route path="/aviso-medico" element={<LegalPage />} />
+          <Route path="/descargo" element={<LegalPage />} />
           <Route path="/politica-editorial" element={<LegalPage />} />
 
           {/* Protected Routes */}

@@ -1,228 +1,436 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import { motion } from 'framer-motion';
+import {
+  BookOpen,
+  ChevronRight,
+  Clock3,
+  FlaskConical,
+  ShieldCheck,
+  User,
+  Waypoints,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/customSupabaseClient';
 import { getGlobalSettings } from '@/lib/adminConfig';
-import { useTheme } from '@/contexts/ThemeContext';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
-import { Heart, Activity, Flame, ShieldAlert, Users, MessageSquare, BookOpen, User } from 'lucide-react';
-import { motion } from 'framer-motion';
+
+const fadeUp = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.2 },
+  transition: { duration: 0.45, ease: 'easeOut' },
+};
+
+const titleClampStyle = {
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+};
+
+const excerptClampStyle = {
+  display: '-webkit-box',
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+};
+
+const getArticleTimestamp = (article) =>
+  new Date(article?.updated_at || article?.published_at || article?.created_at || 0).getTime();
+
+const formatDate = (value) => {
+  if (!value) return 'Actualizado recientemente';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Actualizado recientemente';
+  return new Intl.DateTimeFormat('es-CL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+};
+
+const calculateReadingMinutes = (article) => {
+  if (article?.reading_time_minutes) return `${article.reading_time_minutes} min`;
+  if (article?.content) {
+    const plainText = String(article.content).replace(/<[^>]*>/g, ' ');
+    const words = plainText.trim().split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(2, Math.ceil(words / 220));
+    return `${minutes} min`;
+  }
+  return '4 min';
+};
 
 const HomePage = () => {
   const [articles, setArticles] = useState([]);
-  const { theme } = useTheme();
   const [globalSettings] = useState(() => getGlobalSettings());
 
   useEffect(() => {
     const fetchArticles = async () => {
-      const { data } = await supabase
+      const primary = await supabase
         .from('articles')
         .select('*')
-        .order('published_at', { ascending: false })
-        .limit(3);
-      setArticles(mergeWithLocalPublishedArticles(data || [], { limit: 3 }));
+        .eq('published', true)
+        .order('updated_at', { ascending: false })
+        .limit(6);
+
+      let remoteArticles = primary.data || [];
+
+      if (primary.error) {
+        const fallback = await supabase
+          .from('articles')
+          .select('*')
+          .eq('status', 'published')
+          .order('updated_at', { ascending: false })
+          .limit(6);
+        remoteArticles = fallback.data || [];
+      }
+
+      const merged = mergeWithLocalPublishedArticles(remoteArticles);
+      const sorted = [...merged]
+        .sort((a, b) => getArticleTimestamp(b) - getArticleTimestamp(a))
+        .slice(0, 6);
+
+      setArticles(sorted);
     };
+
     fetchArticles();
   }, []);
 
+  const siteUrl =
+    typeof window !== 'undefined' ? window.location.origin : 'https://bienestarenclaro.com';
+
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 transition-colors duration-300 dark:bg-background dark:text-foreground">
       <Helmet>
-        <title>Bienestar en Claro - Entiende tu cuerpo</title>
-        <meta name="description" content="Entiende lo que está pasando en tu cuerpo, con claridad y sin exageraciones." />
+        <title>Bienestar en Claro | Bienestar basado en evidencia</title>
+        <meta
+          name="description"
+          content="Divulgación sobre metabolismo, inflamación y salud hepática con enfoque latinoamericano, sin exageraciones."
+        />
+        <meta property="og:title" content="Bienestar en Claro | Bienestar basado en evidencia" />
+        <meta
+          property="og:description"
+          content="Información editorial sobre salud metabólica, explicada con claridad y límites explícitos."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={siteUrl} />
       </Helmet>
 
-      {/* Hero Section */}
-      <section className={`relative pt-24 pb-32 overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-b from-background to-[#0a1e16]' : 'bg-gradient-to-b from-background to-emerald-50/50'}`}>
-        <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 z-10 text-center lg:text-left">
-            <h1 className="text-5xl md:text-6xl font-extrabold text-foreground leading-tight tracking-tight">
-              {globalSettings.heroTitle || 'Entiende lo que está pasando en tu cuerpo, con claridad.'}
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto lg:mx-0">
-              {globalSettings.heroSubtitle || 'Explicaciones médicas responsables, sin exageraciones.'}
+      <section id="hero" className="bg-white px-4 pb-20 pt-16 dark:bg-background md:pt-20">
+        <div className="mx-auto grid w-full max-w-[1100px] gap-12 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+          <motion.div {...fadeUp} className="max-w-[650px] space-y-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-600 dark:text-slate-300">
+              Plataforma editorial latinoamericana
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-              <Button asChild size="lg" className="bg-primary hover:opacity-90 text-primary-foreground text-lg px-8 h-14 rounded-full shadow-lg shadow-primary/20">
-                <Link to="/articulos">Explorar artículos</Link>
+            <h1 className="text-4xl font-bold leading-tight text-slate-900 dark:text-foreground md:text-5xl">
+              Bienestar basado en evidencia, explicado con claridad.
+            </h1>
+            <p className="text-lg leading-relaxed text-slate-700 dark:text-muted-foreground">
+              Divulgación sobre metabolismo, inflamación y salud hepática con enfoque
+              latinoamericano, sin exageraciones.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg" className="h-12 rounded-2xl bg-[#1d4e89] px-6 text-white hover:bg-[#163b68]">
+                <Link to="/articulos?categoria=diagnosticos">Explorar diagnósticos</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-foreground border-border hover:bg-muted text-lg px-8 h-14 rounded-full">
-                <Link to="/comunidad">Conocer comunidad</Link>
+              <Button asChild variant="outline" size="lg" className="h-12 rounded-2xl border-slate-300 px-6 text-slate-700 hover:bg-slate-100 dark:border-border dark:text-foreground">
+                <a href="#empieza-aqui">Empieza aquí</a>
               </Button>
             </div>
+            <ul className="grid gap-2 pt-1 text-sm text-slate-600 dark:text-muted-foreground sm:grid-cols-3">
+              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-card">
+                Sin promesas milagro
+              </li>
+              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-card">
+                Estructura clara
+              </li>
+              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-card">
+                Fuentes confiables
+              </li>
+            </ul>
           </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="relative z-10 rounded-2xl overflow-hidden shadow-2xl lg:h-[600px]">
-            <img 
-              src="https://images.unsplash.com/photo-1612537785084-06a08fc52b11" 
-              alt="Medical professional explaining" 
-              className="w-full h-full object-cover"
+
+          <motion.figure {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.08 }} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg dark:border-border dark:bg-card">
+            <img
+              src="https://images.unsplash.com/photo-1573497019418-b400bb3ab074?auto=format&fit=crop&w=1200&q=80&fm=webp"
+              alt="Editora revisando notas sobre salud en un escritorio"
+              className="h-full w-full object-cover"
+              width={900}
+              height={1100}
+              decoding="async"
+              loading="eager"
+              fetchPriority="high"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent lg:hidden" />
-          </motion.div>
+          </motion.figure>
         </div>
       </section>
 
-      {/* Founder Authority Section */}
-      <section className="py-20 bg-card border-y border-border">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto bg-background rounded-3xl p-8 md:p-12 shadow-xl border border-border flex flex-col md:flex-row items-center gap-10">
-            <img 
-              src="https://images.unsplash.com/photo-1575383596664-30f4489f9786" 
-              alt="Daniel Falcón" 
-              className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover shadow-lg border-4 border-primary/20"
-            />
-            <div className="space-y-4 text-center md:text-left flex-1">
-              <div>
-                <h2 className="text-3xl font-bold text-foreground">Daniel Falcón</h2>
-                <p className="text-primary font-medium">Divulgador en bienestar y salud metabólica.</p>
-              </div>
-              <p className="text-muted-foreground leading-relaxed text-lg">
-                {globalSettings.founderBio}
-              </p>
-              <Link to="/sobre-mi" className="inline-block text-foreground font-semibold hover:text-primary transition-colors border-b-2 border-primary pb-1">
-                Ver perfil completo &rarr;
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Diagnósticos Section */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-foreground mb-4">Diagnósticos explicados</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Información sobre salud explicada con claridad y basada en fuentes confiables.</p>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <section id="diferenciacion" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">
+            ¿Por qué Bienestar en Claro es diferente?
+          </h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
-              { title: 'Hígado graso', icon: <Heart className="w-8 h-8" />, desc: 'Metabolismo hepático y reversión' },
-              { title: 'Resistencia a insulina', icon: <Activity className="w-8 h-8" />, desc: 'Equilibrio glucémico y energía' },
-              { title: 'Inflamación', icon: <Flame className="w-8 h-8" />, desc: 'Inflamación crónica de bajo grado' },
-              { title: 'H. pylori', icon: <ShieldAlert className="w-8 h-8" />, desc: 'Salud digestiva y microbioma' }
-            ].map((diag) => (
-              <Link key={diag.title} to="/articulos" className="group block">
-                <Card className="h-full border border-border bg-card shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden">
-                  <CardContent className="p-6 md:p-8 text-center flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                      {diag.icon}
+              {
+                title: 'Basado en evidencia',
+                text: 'Explicamos lo que se sabe hoy, con fuentes y límites claros.',
+                icon: FlaskConical,
+              },
+              {
+                title: 'Sin exageraciones',
+                text: 'Nada de alarmismo ni promesas. Enfoque realista y útil.',
+                icon: ShieldCheck,
+              },
+              {
+                title: 'Enfoque metabólico',
+                text: 'Conectamos diagnóstico, hábitos y contexto de forma práctica.',
+                icon: Waypoints,
+              },
+            ].map((item) => (
+              <Card key={item.title} className="rounded-2xl border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+                <CardContent className="space-y-3 p-6">
+                  <item.icon className="h-8 w-8 text-[#1d4e89] dark:text-primary" />
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-foreground">{item.title}</h3>
+                  <p className="text-sm leading-6 text-slate-600 dark:text-muted-foreground">{item.text}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      <section id="pilares-editoriales" className="bg-white px-4 py-20 dark:bg-background">
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">Áreas centrales</h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              {
+                title: 'Metabolismo hepático',
+                description: 'Hígado graso, marcadores, etapas y decisiones prácticas.',
+                to: '/guias/metabolismo-hepatico',
+              },
+              {
+                title: 'Resistencia a la insulina',
+                description: 'Qué significa, señales, exámenes y cambios sostenibles.',
+                to: '/guias/resistencia-a-la-insulina',
+              },
+              {
+                title: 'Inflamación metabólica',
+                description: 'Inflamación crónica, estilo de vida, sueño y estrés.',
+                to: '/guias/inflamacion-metabolica',
+              },
+            ].map((item) => (
+              <Card key={item.title} className="group rounded-2xl border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
+                <CardContent className="space-y-4 p-6">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-foreground">{item.title}</h3>
+                  <p className="text-sm leading-6 text-slate-600 dark:text-muted-foreground">{item.description}</p>
+                  <Link
+                    to={item.to}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-[#1d4e89] transition-colors hover:text-[#163b68] dark:text-primary"
+                  >
+                    Ver guía
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      <section id="autor-confianza" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
+        <motion.div {...fadeUp} className="mx-auto flex w-full max-w-[1100px] flex-col items-start gap-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm dark:border-border dark:bg-card md:flex-row md:items-center">
+          <img
+            src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=800&q=80&fm=webp"
+            alt="Retrato profesional de Daniel Falcón"
+            className="h-32 w-32 rounded-2xl object-cover md:h-36 md:w-36"
+            width={240}
+            height={240}
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="max-w-[780px] space-y-4">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground">Quién está detrás</h2>
+            <p className="text-lg font-semibold text-[#1d4e89] dark:text-primary">
+              Daniel Falcón
+              <span className="block text-base font-medium text-slate-700 dark:text-muted-foreground">
+                Divulgador en bienestar y salud metabólica (basado en evidencia)
+              </span>
+            </p>
+            <p className="leading-7 text-slate-700 dark:text-muted-foreground">
+              {globalSettings.founderBio ||
+                'Traduzco información de salud y bienestar desde fuentes confiables a lenguaje claro y accionable. Este sitio es educativo y no reemplaza evaluación profesional.'}
+            </p>
+            <ul className="grid gap-2 text-sm text-slate-700 dark:text-muted-foreground sm:grid-cols-3">
+              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-background">
+                Explicación clara y estructurada
+              </li>
+              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-background">
+                Fuentes y límites explícitos
+              </li>
+              <li className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-border dark:bg-background">
+                Cero sensacionalismo
+              </li>
+            </ul>
+            <Button asChild variant="outline" className="rounded-2xl border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-border dark:text-foreground">
+              <Link to="/sobre-mi">Conoce mi enfoque</Link>
+            </Button>
+          </div>
+        </motion.div>
+      </section>
+
+      <section id="empieza-aqui" className="bg-white px-4 py-20 dark:bg-background">
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">Empieza aquí</h2>
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {[
+              {
+                title: 'Tengo un diagnóstico',
+                text: 'Guías para entender qué significa y qué hacer desde hoy.',
+                to: '/empieza-aqui/diagnostico',
+              },
+              {
+                title: 'Quiero prevenir',
+                text: 'Hábitos y señales tempranas para cuidar tu metabolismo.',
+                to: '/empieza-aqui/prevenir',
+              },
+              {
+                title: 'Quiero entender mis exámenes',
+                text: 'Interpretación general: qué mirar y qué preguntar.',
+                to: '/empieza-aqui/examenes',
+              },
+            ].map((item) => (
+              <Card key={item.title} className="rounded-2xl border-slate-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md dark:border-border dark:bg-card">
+                <CardContent className="space-y-4 p-6">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-foreground">{item.title}</h3>
+                  <p className="text-sm leading-6 text-slate-600 dark:text-muted-foreground">{item.text}</p>
+                  <Button asChild className="h-11 w-full rounded-xl bg-[#1d4e89] text-white hover:bg-[#163b68]">
+                    <Link to={item.to}>Ir ahora</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      <section id="ultimas-publicaciones" className="border-y border-slate-200 bg-[#f5f8fb] px-4 py-20 dark:border-border dark:bg-card/40">
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+          <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">Últimas publicaciones</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-muted-foreground">
+                Artículos actualizados periódicamente.
+              </p>
+            </div>
+            <Button asChild variant="outline" className="rounded-2xl border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-border dark:text-foreground">
+              <Link to="/articulos">Ver todo el archivo editorial</Link>
+            </Button>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {articles.map((article) => (
+              <Link key={article.id || article.slug} to={`/articulos/${article.slug}`} className="group block">
+                <Card className="flex h-full flex-col overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
+                  <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-muted">
+                    {article.image_url ? (
+                      <img
+                        src={article.image_url}
+                        alt={article.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <BookOpen className="h-8 w-8 text-slate-400 dark:text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="flex flex-1 flex-col p-5">
+                    <div className="mb-4 flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:bg-background dark:text-muted-foreground">
+                        {article.category || 'General'}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-muted-foreground">
+                        <Clock3 className="h-3.5 w-3.5" />
+                        {calculateReadingMinutes(article)}
+                      </span>
                     </div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">{diag.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{diag.desc}</p>
-                    <span className="text-primary text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Leer guía &rarr;</span>
+                    <h3 className="mb-2 text-xl font-semibold leading-snug text-slate-900 transition-colors group-hover:text-[#1d4e89] dark:text-foreground dark:group-hover:text-primary" style={titleClampStyle}>
+                      {article.title}
+                    </h3>
+                    <p className="mb-5 text-sm text-slate-600 dark:text-muted-foreground" style={excerptClampStyle}>
+                      {article.excerpt || 'Artículo editorial actualizado para contexto latinoamericano.'}
+                    </p>
+                    <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 text-xs text-slate-500 dark:border-border dark:text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <User className="h-3.5 w-3.5" />
+                        {article.author || 'Daniel Falcón'}
+                      </span>
+                      <span>{formatDate(article.updated_at || article.published_at || article.created_at)}</span>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      <section className="py-20 bg-card border-y border-border">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-5">
-            Por qué existe Bienestar en Claro
-          </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Bienestar en Claro nace para ayudarte a entender diagnósticos y procesos del cuerpo de
-            forma simple, responsable y sin exageraciones, para que puedas tomar decisiones con más
-            claridad en tu día a día.
+      <section id="comunidad" className="bg-white px-4 py-20 dark:bg-background">
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px] rounded-3xl border border-slate-200 bg-[#eff6ff] p-8 dark:border-border dark:bg-card">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground">Comunidad de aprendizaje</h2>
+          <p className="mt-3 max-w-[780px] leading-7 text-slate-700 dark:text-muted-foreground">
+            Un espacio moderado para aprender y compartir experiencias sin reemplazar atención
+            profesional.
           </p>
-          <Button asChild variant="outline" className="mt-6">
-            <Link to="/empieza-aqui">Ir a Empieza aquí</Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Community Highlight Section */}
-      <section className="py-24 bg-primary text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0')] bg-cover bg-center mix-blend-overlay" />
-        <div className="container mx-auto px-4 relative z-10 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Nunca estás solo en tu diagnóstico</h2>
-          <p className="text-xl max-w-2xl mx-auto mb-12 opacity-90">
-            Únete a nuestra comunidad moderada. Comparte experiencias, resuelve dudas generales y encuentra apoyo en personas que están en tu mismo camino.
-          </p>
-          <div className="flex flex-wrap justify-center gap-8 mb-12">
-            <div className="flex items-center gap-3 bg-white/10 rounded-full px-6 py-3 backdrop-blur-md">
-              <Users className="w-6 h-6" /> <span className="text-lg font-semibold">+5,000 usuarios activos</span>
-            </div>
-            <div className="flex items-center gap-3 bg-white/10 rounded-full px-6 py-3 backdrop-blur-md">
-              <MessageSquare className="w-6 h-6" /> <span className="text-lg font-semibold">+1,200 discusiones</span>
-            </div>
-          </div>
-          <Button asChild size="lg" className="bg-background text-foreground hover:bg-background/90 text-lg px-10 h-14 rounded-full shadow-xl">
+          <Button asChild className="mt-6 h-11 rounded-xl bg-[#1d4e89] px-6 text-white hover:bg-[#163b68]">
             <Link to="/comunidad">Explorar comunidad</Link>
           </Button>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Latest Articles */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
-            <div>
-              <h2 className="text-4xl font-bold text-foreground mb-2">Últimas publicaciones</h2>
-              <p className="text-muted-foreground">La ciencia médica más reciente, traducida para ti.</p>
-            </div>
-            <Button asChild variant="outline" className="rounded-full">
-              <Link to="/articulos">Ver todos los artículos <BookOpen className="ml-2 w-4 h-4" /></Link>
-            </Button>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {articles.map((article, i) => (
-              <motion.div key={article.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-                <Link to={`/articulos/${article.slug}`} className="group block h-full">
-                  <Card className="h-full border-border bg-card shadow-lg hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden flex flex-col">
-                    <div className="aspect-video relative overflow-hidden bg-muted">
-                      {article.image_url ? (
-                        <img 
-                          src={article.image_url} 
-                          alt={article.title} 
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                          <BookOpen className="w-10 h-10 text-muted-foreground/30" />
-                        </div>
-                      )}
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-background/90 backdrop-blur-sm text-foreground text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                          {article.category || 'Medicina'}
-                        </span>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 md:p-8 flex-grow flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors mb-3 line-clamp-2 leading-tight">
-                          {article.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm line-clamp-3 mb-6 leading-relaxed">
-                          {article.excerpt}
-                        </p>
-                      </div>
-                      <div className="flex justify-between items-center text-xs font-medium text-muted-foreground/80 border-t border-border/50 pt-4">
-                        <span className="flex items-center gap-2"><User className="w-4 h-4" /> {article.author || 'Daniel Falcón'}</span>
-                        <span>{article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Reciente'}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
+      <section id="transparencia" className="border-t border-slate-200 bg-[#f8fafc] px-4 py-20 dark:border-border dark:bg-background">
+        <motion.div {...fadeUp} className="mx-auto w-full max-w-[1100px]">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-foreground md:text-4xl">
+            Transparencia editorial
+          </h2>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {[
+              {
+                title: 'Educativo, no diagnóstico',
+                text: 'No reemplaza consulta médica ni indica tratamientos personalizados.',
+              },
+              {
+                title: 'Fuentes y límites',
+                text: 'Se citan guías y evidencia disponible; se aclara incertidumbre.',
+              },
+              {
+                title: 'Afiliaciones (si aplica)',
+                text: 'Si en el futuro existen enlaces de afiliación, se declararán de forma clara y nunca sustituirán el contenido central.',
+              },
+            ].map((item) => (
+              <Card key={item.title} className="rounded-2xl border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+                <CardContent className="space-y-3 p-6">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-foreground">{item.title}</h3>
+                  <p className="text-sm leading-6 text-slate-600 dark:text-muted-foreground">{item.text}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      <section className="pb-16">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <div className="rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground">
-            <strong className="text-foreground">Descargo médico:</strong> {globalSettings.medicalDisclaimer}
-          </div>
+      <section className="bg-[#f8fafc] px-4 pb-16 dark:bg-background">
+        <div className="mx-auto w-full max-w-[1100px] rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600 dark:border-border dark:bg-card dark:text-muted-foreground">
+          <strong className="text-slate-900 dark:text-foreground">Descargo médico:</strong>{' '}
+          {globalSettings.medicalDisclaimer ||
+            'Este sitio es informativo y no sustituye la consulta médica profesional, diagnóstico o tratamiento personalizado.'}
         </div>
       </section>
     </div>

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,20 +10,48 @@ import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticle
 const ArticlesListPage = () => {
   const [articles, setArticles] = useState([]);
   const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  const categoryFilter = (searchParams.get('categoria') || '').toLowerCase();
 
   useEffect(() => {
     const fetchArticles = async () => {
-      const { data } = await supabase
+      const primary = await supabase
         .from('articles')
         .select('*')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
-      setArticles(mergeWithLocalPublishedArticles(data || []));
+        .eq('published', true)
+        .order('updated_at', { ascending: false });
+
+      let remoteArticles = primary.data || [];
+      if (primary.error) {
+        const fallback = await supabase
+          .from('articles')
+          .select('*')
+          .eq('status', 'published')
+          .order('updated_at', { ascending: false });
+        remoteArticles = fallback.data || [];
+      }
+
+      setArticles(mergeWithLocalPublishedArticles(remoteArticles));
     };
     fetchArticles();
   }, []);
 
-  const filtered = articles.filter(a => a.title.toLowerCase().includes(search.toLowerCase()));
+  const filtered = articles.filter((article) => {
+    const titleMatches = article.title.toLowerCase().includes(search.toLowerCase());
+    if (!categoryFilter) return titleMatches;
+    const normalizedCategory = (article.category || '').toLowerCase();
+    const normalizedSlug = (article.slug || '').toLowerCase();
+    const diagnosticsBucket = categoryFilter === 'diagnosticos';
+    const categoryMatches =
+      normalizedCategory.includes(categoryFilter) ||
+      normalizedSlug.includes(categoryFilter) ||
+      (diagnosticsBucket &&
+        (normalizedSlug.includes('diagnostico') ||
+          normalizedSlug.includes('higado') ||
+          normalizedCategory.includes('higado') ||
+          normalizedCategory.includes('insulina')));
+    return titleMatches && categoryMatches;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">

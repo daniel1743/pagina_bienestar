@@ -5,8 +5,10 @@ import { Helmet } from 'react-helmet';
 
 const contentMap = {
   '/politica-privacidad': { title: 'Política de Privacidad', content: 'Contenido de la política de privacidad...' },
+  '/privacidad': { title: 'Política de Privacidad', content: 'Contenido de la política de privacidad...' },
   '/terminos': { title: 'Términos de Servicio', content: 'Contenido de los términos...' },
   '/aviso-medico': { title: 'Aviso Médico', content: 'Este sitio es solo educativo y no sustituye la consulta médica profesional.' },
+  '/descargo': { title: 'Descargo Médico', content: 'Este sitio es solo educativo y no sustituye la consulta médica profesional.' },
   '/politica-editorial': { title: 'Política Editorial', content: 'Información sobre salud explicada con claridad y basada en fuentes confiables.' },
   '/sobre-mi': { 
     title: 'Sobre Mí', 
@@ -24,8 +26,10 @@ const contentMap = {
   '/contacto': { title: 'Contacto', content: 'Escríbeme a contacto@bienestarenclaro.com' },
   '/empieza-aqui': { title: 'Empieza Aquí', content: 'Guía para comenzar a entender tu salud de manera sencilla.' },
   '/legal/politica-privacidad': { title: 'Política de Privacidad', content: 'Contenido de la política de privacidad...' },
+  '/legal/privacidad': { title: 'Política de Privacidad', content: 'Contenido de la política de privacidad...' },
   '/legal/terminos': { title: 'Términos de Servicio', content: 'Contenido de los términos...' },
   '/legal/aviso-medico': { title: 'Aviso Médico', content: 'Este sitio es solo educativo y no sustituye la consulta médica profesional.' },
+  '/legal/descargo': { title: 'Descargo Médico', content: 'Este sitio es solo educativo y no sustituye la consulta médica profesional.' },
   '/legal/politica-editorial': { title: 'Política Editorial', content: 'Información sobre salud explicada con claridad y basada en fuentes confiables.' }
 };
 

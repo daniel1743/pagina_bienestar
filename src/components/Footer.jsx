@@ -1,48 +1,100 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="bg-card border-t border-border pt-16 pb-8 transition-colors duration-300">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="col-span-1 md:col-span-2 space-y-4">
+    <footer className="border-t border-border bg-white px-4 py-16 transition-colors duration-300 dark:bg-background">
+      <div className="mx-auto w-full max-w-[1100px]">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_1fr_1fr_1fr]">
+          <div className="space-y-4">
             <h3 className="text-xl font-bold text-foreground">
               <span className="text-primary">Bienestar</span> en Claro
             </h3>
-            <p className="text-muted-foreground text-sm max-w-sm">
-              Información sobre salud explicada con claridad y basada en fuentes confiables.
+            <p className="max-w-sm text-sm leading-6 text-muted-foreground">
+              Divulgación editorial sobre salud metabólica con claridad, límites explícitos y enfoque
+              latinoamericano.
             </p>
+            <form
+              action="/api/newsletter"
+              method="post"
+              className="rounded-2xl border border-border bg-card p-4"
+            >
+              <p className="text-sm font-semibold text-foreground">Recibe artículos nuevos y actualizaciones.</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="tu@email.com"
+                  className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none ring-0 placeholder:text-muted-foreground focus:border-primary"
+                />
+                <button
+                  type="submit"
+                  className="h-10 rounded-xl bg-[#1d4e89] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#163b68]"
+                >
+                  Suscribirme
+                </button>
+              </div>
+            </form>
           </div>
-          
+
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-foreground">Temas</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/legal/politica-privacidad" className="hover:text-primary transition-colors">Privacidad</Link></li>
-              <li><Link to="/legal/terminos" className="hover:text-primary transition-colors">Términos</Link></li>
-              <li><Link to="/legal/aviso-medico" className="hover:text-primary transition-colors">Aviso médico</Link></li>
-              <li><Link to="/legal/politica-editorial" className="hover:text-primary transition-colors">Política editorial</Link></li>
+              <li>
+                <Link to="/categorias/metabolismo" className="transition-colors hover:text-primary">
+                  Metabolismo
+                </Link>
+              </li>
+              <li>
+                <Link to="/categorias/higado" className="transition-colors hover:text-primary">
+                  Hígado
+                </Link>
+              </li>
+              <li>
+                <Link to="/categorias/insulina" className="transition-colors hover:text-primary">
+                  Insulina
+                </Link>
+              </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Conecta</h4>
-            <div className="flex gap-4 text-muted-foreground">
-              <a href="#" className="hover:text-primary transition-colors"><Facebook className="w-5 h-5" /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Twitter className="w-5 h-5" /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Instagram className="w-5 h-5" /></a>
-              <a href="#" className="hover:text-primary transition-colors"><Youtube className="w-5 h-5" /></a>
-            </div>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-foreground">Recursos</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link to="/empieza-aqui" className="transition-colors hover:text-primary">
+                  Empieza aquí
+                </Link>
+              </li>
+              <li>
+                <Link to="/sobre-mi" className="transition-colors hover:text-primary">
+                  Sobre mí
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-foreground">Legal</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link to="/descargo" className="transition-colors hover:text-primary">
+                  Descargo médico
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacidad" className="transition-colors hover:text-primary">
+                  Política de privacidad
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
-        
-        <div className="border-t border-border pt-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Bienestar en Claro. Todos los derechos reservados.</p>
-          <p className="text-xs text-muted-foreground/70 max-w-xl text-center md:text-right">
-            ⚠️ <strong>Aviso Médico:</strong> El contenido de este sitio es puramente educativo y no reemplaza la consulta, diagnóstico o tratamiento médico profesional.
-          </p>
+
+        <div className="mt-10 border-t border-border pt-6 text-sm text-muted-foreground">
+          © {new Date().getFullYear()} Bienestar en Claro. Contenido educativo, no diagnóstico médico.
         </div>
       </div>
     </footer>

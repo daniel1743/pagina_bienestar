@@ -172,8 +172,8 @@ export const mergeWithLocalPublishedArticles = (remoteArticles = [], options = {
     .forEach((item) => bySlug.set(item.slug, item));
 
   const merged = Array.from(bySlug.values()).sort((a, b) => {
-    const aDate = new Date(a?.published_at || a?.created_at || 0).getTime();
-    const bDate = new Date(b?.published_at || b?.created_at || 0).getTime();
+    const aDate = new Date(a?.updated_at || a?.published_at || a?.created_at || 0).getTime();
+    const bDate = new Date(b?.updated_at || b?.published_at || b?.created_at || 0).getTime();
     return bDate - aDate;
   });
 
