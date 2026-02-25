@@ -13,9 +13,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/lib/customSupabaseClient';
 import { getGlobalSettings } from '@/lib/adminConfig';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
+import { fetchPublishedArticles, getArticleTimestamp } from '@/lib/articleQueries';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -37,9 +37,6 @@ const excerptClampStyle = {
   WebkitBoxOrient: 'vertical',
   overflow: 'hidden',
 };
-
-const getArticleTimestamp = (article) =>
-  new Date(article?.updated_at || article?.published_at || article?.created_at || 0).getTime();
 
 const formatDate = (value) => {
   if (!value) return 'Actualizado recientemente';
@@ -73,24 +70,7 @@ const HomePage = () => {
 
   useEffect(() => {
     const fetchArticles = async () => {
-      const primary = await supabase
-        .from('articles')
-        .select('*')
-        .eq('published', true)
-        .order('updated_at', { ascending: false })
-        .limit(6);
-
-      let remoteArticles = primary.data || [];
-
-      if (primary.error) {
-        const fallback = await supabase
-          .from('articles')
-          .select('*')
-          .eq('status', 'published')
-          .order('updated_at', { ascending: false })
-          .limit(6);
-        remoteArticles = fallback.data || [];
-      }
+      const { data: remoteArticles } = await fetchPublishedArticles({ limit: 6 });
 
       const merged = mergeWithLocalPublishedArticles(remoteArticles);
       const sorted = [...merged]

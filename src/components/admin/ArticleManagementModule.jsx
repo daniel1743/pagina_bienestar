@@ -325,37 +325,38 @@ const ArticleManagementModule = () => {
 
   const persistMeta = (id, payload) => { const store = getArticleMetaStore(); store[String(id)] = payload; saveArticleMetaStore(store); };
 
-  const saveArticle = async () => {
-    if (!form.title.trim() || !form.slug.trim()) { toast({ title: 'Título y slug obligatorios', variant: 'destructive' }); return; }
-    if (form.metaTitle.length > 60 || form.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
-    const slug = slugify(form.slug);
-    const raw = editor?.getHTML() || form.content;
+  const saveArticle = async (overrides = {}) => {
+    const workingForm = { ...form, ...overrides };
+    if (!workingForm.title.trim() || !workingForm.slug.trim()) { toast({ title: 'Título y slug obligatorios', variant: 'destructive' }); return; }
+    if (workingForm.metaTitle.length > 60 || workingForm.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
+    const slug = slugify(workingForm.slug);
+    const raw = editor?.getHTML() || workingForm.content;
     const content = normalizeHtml(raw);
-    const resolvedSignature = AUTHOR_SIGNATURES[form.authorSignature] ? form.authorSignature : inferAuthorSignature(form.authorName);
+    const resolvedSignature = AUTHOR_SIGNATURES[workingForm.authorSignature] ? workingForm.authorSignature : inferAuthorSignature(workingForm.authorName);
     const resolvedAuthorName =
-      AUTHOR_SIGNATURES[resolvedSignature]?.name || form.authorName || 'Bienestar en Claro';
+      AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
     if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
     const payload = {
-      title: form.title,
+      title: workingForm.title,
       slug,
-      excerpt: form.subtitle,
+      excerpt: workingForm.subtitle,
       content,
-      category: form.category,
-      image_url: form.featuredImage || null,
+      category: workingForm.category,
+      image_url: workingForm.featuredImage || null,
       author: resolvedAuthorName,
-      status: form.status,
+      status: workingForm.status,
       published_at:
-        form.status === 'published'
+        workingForm.status === 'published'
           ? new Date().toISOString()
-          : form.scheduledAt
-            ? new Date(form.scheduledAt).toISOString()
+          : workingForm.scheduledAt
+            ? new Date(workingForm.scheduledAt).toISOString()
             : null,
     };
-    let id = form.id; let savedRemotely = false;
-    const shouldUpdate = Boolean(form.id) && !String(form.id).startsWith('local-');
+    let id = workingForm.id; let savedRemotely = false;
+    const shouldUpdate = Boolean(workingForm.id) && !String(workingForm.id).startsWith('local-');
     if (shouldUpdate) {
-      let { error } = await supabase.from('articles').update(payload).eq('id', form.id);
-      if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ error } = await supabase.from('articles').update(without).eq('id', form.id)); }
+      let { error } = await supabase.from('articles').update(payload).eq('id', workingForm.id);
+      if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ error } = await supabase.from('articles').update(without).eq('id', workingForm.id)); }
       if (error) toast({ title: 'Guardado remoto falló', description: error.message, variant: 'destructive' }); else savedRemotely = true;
     } else {
       let { data, error } = await supabase.from('articles').insert([payload]).select('id').single();
@@ -363,7 +364,7 @@ const ArticleManagementModule = () => {
       if (error) { id = `local-${Date.now()}`; toast({ title: 'Guardado local', description: 'No se pudo guardar en Supabase.', variant: 'destructive' }); } else { id = data.id; savedRemotely = true; }
     }
     const next = {
-      ...form,
+      ...workingForm,
       id,
       slug,
       content,
@@ -371,11 +372,15 @@ const ArticleManagementModule = () => {
       authorName: resolvedAuthorName,
       localOnly: String(id).startsWith('local-'),
     };
-    persistMeta(id, next); logAdminAction('Artículo guardado', { id, title: form.title }); toast({ title: 'Artículo guardado' });
-    if (savedRemotely && form.status === 'published') {
+    persistMeta(id, next); logAdminAction('Artículo guardado', { id, title: workingForm.title }); toast({ title: workingForm.status === 'published' ? 'Artículo publicado' : 'Artículo guardado' });
+    if (savedRemotely && workingForm.status === 'published') {
       try { const r = await refreshSitemapAfterPublish(); toast({ title: r.mode === 'build-only' ? 'Artículo publicado' : 'Sitemap actualizado', description: r.mode === 'build-only' ? 'El sitemap se actualizará en el próximo deploy/build.' : 'Se disparó actualización automática.' }); } catch { toast({ title: 'Artículo publicado', description: 'No se pudo disparar refresh remoto del sitemap. Se actualizará en el próximo deploy.', variant: 'destructive' }); }
     }
     setForm(next); await loadData();
+  };
+
+  const publishArticleNow = async () => {
+    await saveArticle({ status: 'published', scheduledAt: '' });
   };
 
   const deleteArticle = async (article) => {
@@ -615,6 +620,7 @@ const ArticleManagementModule = () => {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowPreview((v) => !v)}><Eye className="w-4 h-4 mr-2" />{showPreview ? 'Editar' : 'Vista previa'}</Button>
           <Button onClick={saveArticle}><Save className="w-4 h-4 mr-2" />Guardar</Button>
+          <Button className="bg-emerald-600 hover:bg-emerald-500 text-white" onClick={publishArticleNow}>Publicar ahora</Button>
         </div>
       </div>
 

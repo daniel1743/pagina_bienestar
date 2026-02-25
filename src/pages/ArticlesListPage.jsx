@@ -2,10 +2,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { supabase } from '@/lib/customSupabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
+import { fetchPublishedArticles, getArticleTimestamp } from '@/lib/articleQueries';
 
 const normalizeSearchText = (value) =>
   String(value || '')
@@ -13,6 +13,14 @@ const normalizeSearchText = (value) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
+
+const formatArticleDate = (article) => {
+  const value = article?.published_at || article?.updated_at || article?.created_at;
+  if (!value) return 'Fecha reciente';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Fecha reciente';
+  return date.toLocaleDateString('es-CL');
+};
 
 const ArticlesListPage = () => {
   const [articles, setArticles] = useState([]);
@@ -22,23 +30,10 @@ const ArticlesListPage = () => {
 
   useEffect(() => {
     const fetchArticles = async () => {
-      const primary = await supabase
-        .from('articles')
-        .select('*')
-        .eq('published', true)
-        .order('updated_at', { ascending: false });
-
-      let remoteArticles = primary.data || [];
-      if (primary.error) {
-        const fallback = await supabase
-          .from('articles')
-          .select('*')
-          .eq('status', 'published')
-          .order('updated_at', { ascending: false });
-        remoteArticles = fallback.data || [];
-      }
-
-      setArticles(mergeWithLocalPublishedArticles(remoteArticles));
+      const { data: remoteArticles } = await fetchPublishedArticles();
+      const merged = mergeWithLocalPublishedArticles(remoteArticles);
+      const sorted = [...merged].sort((a, b) => getArticleTimestamp(b) - getArticleTimestamp(a));
+      setArticles(sorted);
     };
     fetchArticles();
   }, []);
@@ -127,7 +122,7 @@ const ArticlesListPage = () => {
                   <p className="text-slate-600 text-sm line-clamp-3">{article.excerpt}</p>
                   <div className="pt-4 flex justify-between items-center text-xs text-slate-500">
                     <span>{article.author}</span>
-                    <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                    <span>{formatArticleDate(article)}</span>
                   </div>
                 </CardContent>
               </Card>
