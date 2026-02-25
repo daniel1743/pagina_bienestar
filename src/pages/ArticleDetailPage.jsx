@@ -10,6 +10,21 @@ import CommentsSection from '@/components/CommentsSection';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { getLocalPublishedArticleBySlug } from '@/content/localPublishedArticles';
 
+const normalizeAuthor = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+const getAuthorPresentation = (authorName) => {
+  const normalized = normalizeAuthor(authorName);
+  if (normalized.includes('daniel')) {
+    return { name: 'Daniel Falcón', avatar: '/images/DANIEL_FALCON.jpeg' };
+  }
+  return { name: 'Bienestar en Claro', avatar: '/branding/monogram-bc-180.png' };
+};
+
 const ArticleDetailPage = () => {
   const { slug } = useParams();
   const [article, setArticle] = useState(null);
@@ -18,6 +33,7 @@ const ArticleDetailPage = () => {
   const { currentUser } = useAuth();
   const { toast } = useToast();
   const isLocalArticle = Boolean(article?.is_local) || String(article?.id || '').startsWith('local-');
+  const authorPresentation = getAuthorPresentation(article?.author);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -104,12 +120,12 @@ const ArticleDetailPage = () => {
             ) : null}
             <div className="flex items-center gap-2">
             <img 
-              src="https://images.unsplash.com/photo-1575383596664-30f4489f9786" 
-              alt={article.author || 'Daniel Falcón'} 
+              src={authorPresentation.avatar}
+              alt={authorPresentation.name}
               className="w-12 h-12 rounded-full object-cover border-2 border-border shadow-sm"
             />
             <div className="text-left">
-              <p className="font-bold text-foreground text-base">{article.author || 'Daniel Falcón'}</p>
+              <p className="font-bold text-foreground text-base">{authorPresentation.name}</p>
               <p>{article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Fecha reciente'} • 5 min de lectura</p>
             </div>
             </div>

@@ -63,15 +63,30 @@ const MAX_IMAGE_WIDTH = 1600;
 const IMAGE_QUALITY_START = 0.8;
 const IMAGE_QUALITY_MIN = 0.6;
 const WEBP_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*\.webp$/;
+const AUTHOR_SIGNATURES = {
+  brand: { key: 'brand', name: 'Bienestar en Claro', avatar: '/branding/monogram-bc-180.png' },
+  daniel: { key: 'daniel', name: 'Daniel Falcón', avatar: '/images/DANIEL_FALCON.jpeg' },
+};
 
 const emptyForm = {
   id: null, title: '', subtitle: '', slug: '', category: 'General', tags: '', status: 'draft',
-  scheduledAt: '', authorName: '', authorBio: '', featuredImage: '', videoEmbed: '',
+  scheduledAt: '', authorName: 'Bienestar en Claro', authorSignature: 'brand', authorBio: '', featuredImage: '', videoEmbed: '',
   externalLinks: [''], metaTitle: '', metaDescription: '', focusKeyword: '', secondaryKeywords: '',
   canonical: '', noIndex: false, content: '<p>Escribe tu contenido...</p>',
 };
 
 const slugify = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+const normalizeAuthorName = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+const inferAuthorSignature = (authorName) => {
+  const normalized = normalizeAuthorName(authorName);
+  if (normalized.includes('daniel')) return 'daniel';
+  return 'brand';
+};
 const normalizeStatus = (value) => (['published', 'publicado'].includes((value || '').toLowerCase()) ? 'published' : ['scheduled', 'programado'].includes((value || '').toLowerCase()) ? 'scheduled' : ['review', 'en_revision', 'revision'].includes((value || '').toLowerCase()) ? 'review' : 'draft');
 const normalizeHtml = (html) => (html || '').replace(/<h1(\s[^>]*)?>/gi, '<h2$1>').replace(/<\/h1>/gi, '</h2>');
 const safeRead = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) ?? fallback : fallback; } catch { return fallback; } };
@@ -204,7 +219,6 @@ const optimizeToWebpWithEdgeFunction = async (file) => {
 const ArticleManagementModule = () => {
   const { toast } = useToast();
   const [articles, setArticles] = useState([]);
-  const [authors, setAuthors] = useState([]);
   const [form, setForm] = useState({ ...emptyForm });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -241,18 +255,44 @@ const ArticleManagementModule = () => {
 
   const loadData = async () => {
     const meta = getArticleMetaStore();
-    const [{ data: rows }, { data: profiles }] = await Promise.all([
-      supabase.from('articles').select('*').order('created_at', { ascending: false }),
-      supabase.from('user_profiles').select('user_id,name,bio').order('created_at', { ascending: false }),
-    ]);
+    const { data: rows } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
     const remote = (rows || []).map((a) => {
       const m = meta[String(a.id)] || {};
-      return { ...emptyForm, ...m, id: a.id, title: a.title || '', subtitle: m.subtitle ?? a.excerpt ?? '', slug: a.slug || '', category: m.category ?? a.category ?? 'General', status: normalizeStatus(m.status || a.status), authorName: m.authorName || a.author || '', featuredImage: m.featuredImage || a.image_url || '', content: m.content || a.content || '<p>Sin contenido</p>' };
+      const authorName = m.authorName || a.author || 'Bienestar en Claro';
+      return {
+        ...emptyForm,
+        ...m,
+        id: a.id,
+        title: a.title || '',
+        subtitle: m.subtitle ?? a.excerpt ?? '',
+        slug: a.slug || '',
+        category: m.category ?? a.category ?? 'General',
+        status: normalizeStatus(m.status || a.status),
+        authorName,
+        authorSignature: m.authorSignature || inferAuthorSignature(authorName),
+        featuredImage: m.featuredImage || a.image_url || '',
+        content: m.content || a.content || '<p>Sin contenido</p>',
+      };
     });
     const dbSlugs = new Set(remote.map((a) => a.slug));
-    const local = LOCAL_PUBLISHED_ARTICLES.filter((a) => !dbSlugs.has(a.slug)).map((a) => ({ ...emptyForm, id: a.id, title: a.title, subtitle: a.excerpt, slug: a.slug, category: a.category || 'General', status: 'published', authorName: a.author || 'Equipo editorial', featuredImage: a.image_url || '', content: a.content || '<p>Sin contenido</p>', localOnly: true }));
+    const local = LOCAL_PUBLISHED_ARTICLES.filter((a) => !dbSlugs.has(a.slug)).map((a) => {
+      const authorName = a.author || 'Bienestar en Claro';
+      return {
+        ...emptyForm,
+        id: a.id,
+        title: a.title,
+        subtitle: a.excerpt,
+        slug: a.slug,
+        category: a.category || 'General',
+        status: 'published',
+        authorName,
+        authorSignature: inferAuthorSignature(authorName),
+        featuredImage: a.image_url || '',
+        content: a.content || '<p>Sin contenido</p>',
+        localOnly: true,
+      };
+    });
     setArticles([...local, ...remote]);
-    setAuthors((profiles || []).map((p) => ({ id: p.user_id, name: p.name || 'Autor', bio: p.bio || '' })));
   };
 
   useEffect(() => { loadData(); }, []);
@@ -291,8 +331,26 @@ const ArticleManagementModule = () => {
     const slug = slugify(form.slug);
     const raw = editor?.getHTML() || form.content;
     const content = normalizeHtml(raw);
+    const resolvedSignature = AUTHOR_SIGNATURES[form.authorSignature] ? form.authorSignature : inferAuthorSignature(form.authorName);
+    const resolvedAuthorName =
+      AUTHOR_SIGNATURES[resolvedSignature]?.name || form.authorName || 'Bienestar en Claro';
     if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
-    const payload = { title: form.title, slug, excerpt: form.subtitle, content, category: form.category, image_url: form.featuredImage || null, author: form.authorName || 'Equipo editorial', status: form.status, published_at: form.status === 'published' ? new Date().toISOString() : form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null };
+    const payload = {
+      title: form.title,
+      slug,
+      excerpt: form.subtitle,
+      content,
+      category: form.category,
+      image_url: form.featuredImage || null,
+      author: resolvedAuthorName,
+      status: form.status,
+      published_at:
+        form.status === 'published'
+          ? new Date().toISOString()
+          : form.scheduledAt
+            ? new Date(form.scheduledAt).toISOString()
+            : null,
+    };
     let id = form.id; let savedRemotely = false;
     const shouldUpdate = Boolean(form.id) && !String(form.id).startsWith('local-');
     if (shouldUpdate) {
@@ -304,7 +362,15 @@ const ArticleManagementModule = () => {
       if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ data, error } = await supabase.from('articles').insert([without]).select('id').single()); }
       if (error) { id = `local-${Date.now()}`; toast({ title: 'Guardado local', description: 'No se pudo guardar en Supabase.', variant: 'destructive' }); } else { id = data.id; savedRemotely = true; }
     }
-    const next = { ...form, id, slug, content, localOnly: String(id).startsWith('local-') };
+    const next = {
+      ...form,
+      id,
+      slug,
+      content,
+      authorSignature: resolvedSignature,
+      authorName: resolvedAuthorName,
+      localOnly: String(id).startsWith('local-'),
+    };
     persistMeta(id, next); logAdminAction('Artículo guardado', { id, title: form.title }); toast({ title: 'Artículo guardado' });
     if (savedRemotely && form.status === 'published') {
       try { const r = await refreshSitemapAfterPublish(); toast({ title: r.mode === 'build-only' ? 'Artículo publicado' : 'Sitemap actualizado', description: r.mode === 'build-only' ? 'El sitemap se actualizará en el próximo deploy/build.' : 'Se disparó actualización automática.' }); } catch { toast({ title: 'Artículo publicado', description: 'No se pudo disparar refresh remoto del sitemap. Se actualizará en el próximo deploy.', variant: 'destructive' }); }
@@ -585,7 +651,35 @@ const ArticleManagementModule = () => {
               <div><Label>Categoría</Label><select value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100">{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
               <div><Label>Estado</Label><select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100">{STATUS.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
               <div><Label>Fecha programada</Label><Input type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm((p) => ({ ...p, scheduledAt: e.target.value }))} /></div>
-              <div><Label>Autor</Label><Input value={form.authorName} onChange={(e) => setForm((p) => ({ ...p, authorName: e.target.value }))} placeholder={authors[0]?.name || 'Autor'} /></div>
+              <div className="space-y-2">
+                <Label>Firma editorial</Label>
+                <select
+                  value={form.authorSignature || inferAuthorSignature(form.authorName)}
+                  onChange={(e) => {
+                    const nextSignature = e.target.value;
+                    const selected = AUTHOR_SIGNATURES[nextSignature] || AUTHOR_SIGNATURES.brand;
+                    setForm((p) => ({
+                      ...p,
+                      authorSignature: nextSignature,
+                      authorName: selected.name,
+                    }));
+                  }}
+                  className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100"
+                >
+                  <option value="brand">Bienestar en Claro (logo)</option>
+                  <option value="daniel">Daniel Falcón (foto)</option>
+                </select>
+                <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/50 px-2.5 py-2">
+                  <img
+                    src={(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).avatar}
+                    alt={(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).name}
+                    className="h-8 w-8 rounded-full object-cover border border-slate-600"
+                  />
+                  <p className="text-xs text-slate-300">
+                    Se mostrará como: <span className="font-semibold">{(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).name}</span>
+                  </p>
+                </div>
+              </div>
               <div><Label>Meta title ({form.metaTitle.length}/60)</Label><Input value={form.metaTitle} onChange={(e) => setForm((p) => ({ ...p, metaTitle: e.target.value }))} className={form.metaTitle.length > 60 ? 'border-amber-400' : ''} /></div>
               <div><Label>Keyword principal</Label><Input value={form.focusKeyword} onChange={(e) => setForm((p) => ({ ...p, focusKeyword: e.target.value }))} /></div>
               <div className="md:col-span-2"><Label>Meta description ({form.metaDescription.length}/160)</Label><textarea value={form.metaDescription} onChange={(e) => setForm((p) => ({ ...p, metaDescription: e.target.value }))} rows={2} className={`w-full rounded-lg border px-3 py-2 text-sm ${form.metaDescription.length > 160 ? 'border-amber-400 bg-slate-700/50 text-slate-100' : 'border-slate-600 bg-slate-700/50 text-slate-100'}`} /></div>

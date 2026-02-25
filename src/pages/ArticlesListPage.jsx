@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -7,11 +7,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
 
+const normalizeSearchText = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
 const ArticlesListPage = () => {
   const [articles, setArticles] = useState([]);
   const [search, setSearch] = useState('');
   const [searchParams] = useSearchParams();
-  const categoryFilter = (searchParams.get('categoria') || '').toLowerCase();
+  const categoryFilter = normalizeSearchText(searchParams.get('categoria') || '');
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -36,22 +43,52 @@ const ArticlesListPage = () => {
     fetchArticles();
   }, []);
 
-  const filtered = articles.filter((article) => {
-    const titleMatches = article.title.toLowerCase().includes(search.toLowerCase());
-    if (!categoryFilter) return titleMatches;
-    const normalizedCategory = (article.category || '').toLowerCase();
-    const normalizedSlug = (article.slug || '').toLowerCase();
-    const diagnosticsBucket = categoryFilter === 'diagnosticos';
-    const categoryMatches =
-      normalizedCategory.includes(categoryFilter) ||
-      normalizedSlug.includes(categoryFilter) ||
-      (diagnosticsBucket &&
-        (normalizedSlug.includes('diagnostico') ||
-          normalizedSlug.includes('higado') ||
-          normalizedCategory.includes('higado') ||
-          normalizedCategory.includes('insulina')));
-    return titleMatches && categoryMatches;
-  });
+  const indexedArticles = useMemo(
+    () =>
+      articles.map((article) => {
+        const searchableBlob = [
+          article.title,
+          article.excerpt,
+          article.category,
+          article.slug,
+          article.author,
+        ]
+          .filter(Boolean)
+          .join(' ');
+
+        return {
+          ...article,
+          _searchIndex: normalizeSearchText(searchableBlob),
+          _categoryNormalized: normalizeSearchText(article.category || ''),
+          _slugNormalized: normalizeSearchText(article.slug || ''),
+        };
+      }),
+    [articles],
+  );
+
+  const filtered = useMemo(() => {
+    const normalizedSearch = normalizeSearchText(search);
+    const searchTerms = normalizedSearch.split(/\s+/).filter(Boolean);
+
+    return indexedArticles.filter((article) => {
+      const titleMatches =
+        searchTerms.length === 0 || searchTerms.every((term) => article._searchIndex.includes(term));
+
+      if (!categoryFilter) return titleMatches;
+
+      const diagnosticsBucket = categoryFilter === 'diagnosticos';
+      const categoryMatches =
+        article._categoryNormalized.includes(categoryFilter) ||
+        article._slugNormalized.includes(categoryFilter) ||
+        (diagnosticsBucket &&
+          (article._slugNormalized.includes('diagnostico') ||
+            article._slugNormalized.includes('higado') ||
+            article._categoryNormalized.includes('higado') ||
+            article._categoryNormalized.includes('insulina')));
+
+      return titleMatches && categoryMatches;
+    });
+  }, [indexedArticles, search, categoryFilter]);
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -97,6 +134,13 @@ const ArticlesListPage = () => {
             </Link>
           ))}
         </div>
+
+        {filtered.length === 0 ? (
+          <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+            No encontramos artículos con ese criterio. Prueba con palabras como "higado",
+            "insulina", "inflamacion" o "metabolismo".
+          </div>
+        ) : null}
       </div>
     </div>
   );

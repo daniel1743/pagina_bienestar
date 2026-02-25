@@ -571,6 +571,179 @@ const FAQPage = () => {
   );
 };
 
+const GlossaryPage = () => {
+  const terms = [
+    {
+      term: 'MASLD / SLD',
+      definition:
+        'MASLD es la categoría de enfermedad hepática esteatósica asociada a disfunción metabólica dentro del paraguas SLD. Reemplaza nomenclaturas previas para reflejar mejor el componente cardiometabólico.',
+    },
+    {
+      term: 'Resistencia a la insulina',
+      definition:
+        'Disminución de la respuesta de tejidos como músculo, hígado y tejido adiposo a la señal de la insulina. Se asocia a alteración glucémica, hígado graso y mayor riesgo de diabetes tipo 2.',
+    },
+    {
+      term: 'Inflamación metabólica',
+      definition:
+        'Estado inflamatorio crónico de bajo grado vinculado a disfunción metabólica. No equivale a infección aguda y requiere interpretación en contexto clínico completo.',
+    },
+    {
+      term: 'Fibrosis hepática',
+      definition:
+        'Formación de tejido cicatricial en el hígado. En enfermedad hepática metabólica, la fibrosis es un marcador clave de pronóstico y estratificación de riesgo.',
+    },
+    {
+      term: 'FIB-4',
+      definition:
+        'Índice no invasivo basado en edad y analítica (AST, ALT, plaquetas) utilizado para estimar riesgo de fibrosis. Es herramienta de triaje, no diagnóstico definitivo por sí sola.',
+    },
+    {
+      term: 'HbA1c',
+      definition:
+        'Hemoglobina glicosilada que refleja promedio aproximado de glucosa de semanas previas. Se usa en criterios diagnósticos y seguimiento metabólico junto a otros marcadores.',
+    },
+    {
+      term: 'OGTT',
+      definition:
+        'Prueba de tolerancia oral a la glucosa. Evalúa respuesta metabólica tras carga de glucosa y ayuda a detectar alteraciones que no siempre se evidencian en ayuno.',
+    },
+    {
+      term: 'Adiposidad visceral',
+      definition:
+        'Acumulación de grasa intraabdominal asociada a mayor riesgo cardiometabólico. Su relevancia supera la lectura aislada del peso corporal total.',
+    },
+    {
+      term: 'Disbiosis',
+      definition:
+        'Alteración del equilibrio funcional de la microbiota intestinal. Puede asociarse a fenómenos metabólicos, pero su interpretación requiere cautela y evidencia contextual.',
+    },
+    {
+      term: 'Riesgo cardiovascular',
+      definition:
+        'Probabilidad de eventos como infarto o accidente cerebrovascular según perfil metabólico y factores clínicos. En salud hepática metabólica, suele ser un eje central de pronóstico.',
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] px-4 py-16 dark:bg-background">
+      <Helmet>
+        <title>Glosario - Bienestar en Claro</title>
+        <meta
+          name="description"
+          content="Glosario editorial de términos en salud metabólica para lectura técnica accesible y contexto clínico responsable."
+        />
+      </Helmet>
+
+      <div className="mx-auto w-full max-w-[1100px]">
+        <nav className="mb-8 text-sm text-slate-500 dark:text-muted-foreground">
+          <Link to="/" className="transition-colors hover:text-primary">
+            Inicio
+          </Link>{' '}
+          &gt; <span>Glosario</span>
+        </nav>
+
+        <header className="border-b border-slate-200 pb-8 dark:border-border">
+          <h1 className="text-3xl font-semibold text-[#0B1F3B] dark:text-foreground md:text-4xl">Glosario</h1>
+          <p className="mt-4 max-w-[65ch] leading-7 text-slate-700 dark:text-muted-foreground">
+            Definiciones editoriales para términos frecuentes en metabolismo, hígado, insulina,
+            inflamación y riesgo cardiovascular. Este glosario es educativo y no reemplaza evaluación
+            clínica profesional.
+          </p>
+        </header>
+
+        <article className="mt-10 max-w-[65ch] space-y-6 text-slate-800 dark:text-foreground">
+          {terms.map((item) => (
+            <section key={item.term} className="border-b border-slate-200 pb-5 dark:border-border">
+              <h2 className="text-xl font-semibold text-[#0B1F3B] dark:text-foreground">{item.term}</h2>
+              <p className="mt-2 leading-7 text-slate-700 dark:text-muted-foreground">{item.definition}</p>
+            </section>
+          ))}
+        </article>
+      </div>
+    </div>
+  );
+};
+
+const NewsletterPage = () => (
+  <div className="min-h-screen bg-[#f8fafc] px-4 py-16 dark:bg-background">
+    <Helmet>
+      <title>Newsletter - Bienestar en Claro</title>
+      <meta
+        name="description"
+        content="Política editorial del newsletter: frecuencia, alcance, privacidad y límites del contenido en salud metabólica."
+      />
+    </Helmet>
+
+    <div className="mx-auto w-full max-w-[1100px]">
+      <nav className="mb-8 text-sm text-slate-500 dark:text-muted-foreground">
+        <Link to="/" className="transition-colors hover:text-primary">
+          Inicio
+        </Link>{' '}
+        &gt; <span>Newsletter</span>
+      </nav>
+
+      <header className="border-b border-slate-200 pb-8 dark:border-border">
+        <h1 className="text-3xl font-semibold text-[#0B1F3B] dark:text-foreground md:text-4xl">Newsletter</h1>
+        <p className="mt-4 max-w-[65ch] leading-7 text-slate-700 dark:text-muted-foreground">
+          El newsletter reúne actualizaciones editoriales sobre salud metabólica en formato breve y
+          curado. Mantiene el mismo estándar de evidencia y límites explícitos del sitio.
+        </p>
+      </header>
+
+      <article className="mt-10 max-w-[65ch] space-y-10 text-slate-800 dark:text-foreground">
+        <section aria-labelledby="contenido-newsletter">
+          <h2 id="contenido-newsletter" className="text-2xl font-semibold text-[#0B1F3B] dark:text-foreground">
+            1. Qué incluye
+          </h2>
+          <p className="mt-4 leading-7 text-slate-700 dark:text-muted-foreground">
+            Incluye nuevas publicaciones, actualizaciones relevantes de guías, correcciones
+            editoriales y síntesis de evidencia útil para lectura clínica informada. Los temas
+            centrales son hígado graso metabólico, resistencia a la insulina, inflamación de bajo
+            grado, microbiota y riesgo cardiovascular.
+          </p>
+        </section>
+
+        <section aria-labelledby="frecuencia-newsletter">
+          <h2 id="frecuencia-newsletter" className="text-2xl font-semibold text-[#0B1F3B] dark:text-foreground">
+            2. Frecuencia y formato
+          </h2>
+          <p className="mt-4 leading-7 text-slate-700 dark:text-muted-foreground">
+            La frecuencia habitual es de uno a dos correos al mes. No se utiliza envío masivo diario
+            ni secuencias automatizadas de presión comercial. El formato prioriza contexto y lectura
+            comprensible por sobre volumen.
+          </p>
+        </section>
+
+        <section aria-labelledby="limites-newsletter">
+          <h2 id="limites-newsletter" className="text-2xl font-semibold text-[#0B1F3B] dark:text-foreground">
+            3. Límites del contenido
+          </h2>
+          <p className="mt-4 leading-7 text-slate-700 dark:text-muted-foreground">
+            El newsletter no realiza diagnóstico, no emite tratamientos personalizados y no reemplaza
+            consulta médica. No se publican promesas de salud ni recomendaciones sensacionalistas.
+            Cuando la evidencia sea incierta o en evolución, se declara de forma explícita.
+          </p>
+        </section>
+
+        <section aria-labelledby="privacidad-newsletter">
+          <h2 id="privacidad-newsletter" className="text-2xl font-semibold text-[#0B1F3B] dark:text-foreground">
+            4. Privacidad y baja
+          </h2>
+          <p className="mt-4 leading-7 text-slate-700 dark:text-muted-foreground">
+            El correo se utiliza para comunicaciones editoriales del proyecto y puede cancelarse en
+            cualquier momento mediante enlace de baja. El tratamiento de datos personales se rige por
+            la Política de Privacidad vigente.
+          </p>
+          <p className="mt-4 text-sm text-slate-600 dark:text-muted-foreground">
+            Para suscribirte, utiliza el formulario de newsletter disponible en el footer del sitio.
+          </p>
+        </section>
+      </article>
+    </div>
+  </div>
+);
+
 const InfoStubPage = () => {
   const location = useLocation();
 
@@ -588,6 +761,14 @@ const InfoStubPage = () => {
 
   if (location.pathname === '/faq') {
     return <FAQPage />;
+  }
+
+  if (location.pathname === '/glosario') {
+    return <GlossaryPage />;
+  }
+
+  if (location.pathname === '/newsletter') {
+    return <NewsletterPage />;
   }
 
   const page = PAGE_MAP[location.pathname] || {
