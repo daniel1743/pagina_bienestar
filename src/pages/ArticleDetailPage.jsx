@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import CommentsSection from '@/components/CommentsSection';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { getLocalPublishedArticleBySlug } from '@/content/localPublishedArticles';
+import { getEditorialContentDiagnostics, sanitizeEditorialHtml } from '@/lib/editorialContent';
 
 const normalizeAuthor = (value) =>
   String(value || '')
@@ -34,6 +35,14 @@ const ArticleDetailPage = () => {
   const { toast } = useToast();
   const isLocalArticle = Boolean(article?.is_local) || String(article?.id || '').startsWith('local-');
   const authorPresentation = getAuthorPresentation(article?.author);
+  const contentDiagnostics = useMemo(
+    () => getEditorialContentDiagnostics(article?.content || ''),
+    [article?.content],
+  );
+  const safePublishedHtml = useMemo(
+    () => sanitizeEditorialHtml(article?.content || '<p>Contenido no disponible.</p>'),
+    [article?.content],
+  );
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -53,7 +62,7 @@ const ArticleDetailPage = () => {
 
   useEffect(() => {
     const checkSaved = async () => {
-      if (!currentUser || !article?.id || isLocalArticle) return;
+      if (!currentUser?.id || !article?.id || isLocalArticle) return;
       const { data } = await supabase
         .from('saved_articles')
         .select('id')
@@ -142,9 +151,10 @@ const ArticleDetailPage = () => {
           </div>
         )}
 
-        <div 
-          className="prose prose-lg dark:prose-invert prose-slate max-w-none prose-headings:font-bold prose-headings:text-foreground prose-p:text-foreground/90 prose-a:text-primary hover:prose-a:text-primary/80 prose-strong:text-foreground"
-          dangerouslySetInnerHTML={{ __html: article.content || '<p>Contenido no disponible.</p>' }}
+        <div
+          className="editorial-content max-w-none text-[1.04rem] leading-8 text-slate-900 dark:text-slate-100"
+          data-editor-format={contentDiagnostics.format}
+          dangerouslySetInnerHTML={{ __html: safePublishedHtml }}
         />
 
         <div className="bg-orange-500/10 border-l-4 border-orange-500 p-6 mt-12 mb-12 text-sm text-orange-700 dark:text-orange-400 rounded-r-xl">

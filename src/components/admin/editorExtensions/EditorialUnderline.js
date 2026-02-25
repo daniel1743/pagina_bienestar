@@ -33,6 +33,12 @@ const EditorialUnderline = Mark.create({
           commands.unsetMark(this.name),
     };
   },
+
+  addKeyboardShortcuts() {
+    return {
+      'Mod-u': () => this.editor.commands.toggleEditorialUnderline(),
+    };
+  },
 });
 
 export default EditorialUnderline;

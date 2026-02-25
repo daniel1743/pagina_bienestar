@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { BubbleMenu, EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Table from '@tiptap/extension-table';
@@ -20,6 +20,10 @@ import {
   saveMediaLibrary,
 } from '@/lib/adminConfig';
 import { refreshSitemapAfterPublish } from '@/lib/sitemapRefresh';
+import {
+  getEditorialContentDiagnostics,
+  sanitizeEditorialHtml,
+} from '@/lib/editorialContent';
 import { LOCAL_PUBLISHED_ARTICLES } from '@/content/localPublishedArticles';
 import EditorialUnderline from '@/components/admin/editorExtensions/EditorialUnderline';
 import EditorialColor from '@/components/admin/editorExtensions/EditorialColor';
@@ -57,6 +61,7 @@ import {
 const STATUS = ['draft', 'review', 'scheduled', 'published'];
 const CATEGORIES = ['General', 'Hígado', 'Digestión', 'Metabolismo', 'Inflamación', 'Nutrición'];
 const COLORS = ['#1d4ed8', '#334155'];
+const FORMAT_LABELS = { html: 'HTML', escaped_html: 'HTML escapado', plain_text: 'Texto plano' };
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 300 * 1024;
 const MAX_IMAGE_WIDTH = 1600;
@@ -88,7 +93,6 @@ const inferAuthorSignature = (authorName) => {
   return 'brand';
 };
 const normalizeStatus = (value) => (['published', 'publicado'].includes((value || '').toLowerCase()) ? 'published' : ['scheduled', 'programado'].includes((value || '').toLowerCase()) ? 'scheduled' : ['review', 'en_revision', 'revision'].includes((value || '').toLowerCase()) ? 'review' : 'draft');
-const normalizeHtml = (html) => (html || '').replace(/<h1(\s[^>]*)?>/gi, '<h2$1>').replace(/<\/h1>/gi, '</h2>');
 const safeRead = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) ?? fallback : fallback; } catch { return fallback; } };
 const safeWrite = (key, value) => localStorage.setItem(key, JSON.stringify(value));
 const toDataUrl = (file) => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result || '')); r.onerror = () => reject(new Error('No se pudo leer la imagen.')); r.readAsDataURL(file); });
@@ -107,6 +111,25 @@ const base64ToBlob = (base64, mime = 'image/webp') => {
 const countImages = (node) => !node ? 0 : (node.type === 'image' ? 1 : 0) + (Array.isArray(node.content) ? node.content.reduce((a, b) => a + countImages(b), 0) : 0);
 const btn = (active = false) => `h-9 min-w-9 px-2 inline-flex items-center justify-center rounded-md border transition ${active ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'}`;
 const escapeHtml = (value) => String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+const normalizeLinkValue = (raw) => {
+  const value = String(raw || '').trim();
+  if (!value) return '';
+  if (
+    value.startsWith('/') ||
+    value.startsWith('#') ||
+    value.startsWith('./') ||
+    value.startsWith('../') ||
+    value.startsWith('http://') ||
+    value.startsWith('https://') ||
+    value.startsWith('mailto:') ||
+    value.startsWith('tel:')
+  ) {
+    return value;
+  }
+  return `https://${value}`;
+};
+const isInternalUrl = (url) =>
+  url.startsWith('/') || url.startsWith('#') || url.startsWith('./') || url.startsWith('../');
 const seoWebpName = (raw) => `${slugify((raw || '').replace(/\.[^/.]+$/, '')) || 'imagen-editorial'}.webp`;
 const defaultAltFromFileName = (rawName) => {
   const cleaned = slugify((rawName || '').replace(/\.[^/.]+$/, '')).replace(/-/g, ' ').trim();
@@ -233,8 +256,10 @@ const ArticleManagementModule = () => {
   const [internalDisplay, setInternalDisplay] = useState('full');
   const [isOptimizingInternalImage, setIsOptimizingInternalImage] = useState(false);
   const [optimizedInternalInfo, setOptimizedInternalInfo] = useState(null);
+  const [contextMenu, setContextMenu] = useState({ open: false, x: 0, y: 0 });
   const quickImageInputRef = useRef(null);
   const lastSelectionRef = useRef(null);
+  const contextMenuRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -243,7 +268,7 @@ const ArticleManagementModule = () => {
       EditorialUnderline, EditorialColor, EditorialCallout, EditorialImage,
       Table.configure({ resizable: true }), TableRow, TableCell, TableHeader,
     ],
-    content: form.content,
+    content: sanitizeEditorialHtml(form.content),
     onUpdate: ({ editor: ed }) => setForm((p) => ({ ...p, content: ed.getHTML() })),
     onCreate: ({ editor: ed }) => {
       lastSelectionRef.current = ed.state.selection.from;
@@ -271,7 +296,7 @@ const ArticleManagementModule = () => {
         authorName,
         authorSignature: m.authorSignature || inferAuthorSignature(authorName),
         featuredImage: m.featuredImage || a.image_url || '',
-        content: m.content || a.content || '<p>Sin contenido</p>',
+        content: sanitizeEditorialHtml(m.content || a.content || '<p>Sin contenido</p>'),
       };
     });
     const dbSlugs = new Set(remote.map((a) => a.slug));
@@ -288,7 +313,7 @@ const ArticleManagementModule = () => {
         authorName,
         authorSignature: inferAuthorSignature(authorName),
         featuredImage: a.image_url || '',
-        content: a.content || '<p>Sin contenido</p>',
+        content: sanitizeEditorialHtml(a.content || '<p>Sin contenido</p>'),
         localOnly: true,
       };
     });
@@ -296,14 +321,48 @@ const ArticleManagementModule = () => {
   };
 
   useEffect(() => { loadData(); }, []);
-  useEffect(() => { if (editor && editor.getHTML() !== form.content) editor.commands.setContent(form.content || '<p></p>', false); }, [editor, form.id, form.content]);
+  useEffect(() => {
+    if (!editor) return;
+    const normalized = sanitizeEditorialHtml(form.content || '<p></p>');
+    if (editor.getHTML() !== normalized) editor.commands.setContent(normalized, false);
+  }, [editor, form.id, form.content]);
   useEffect(() => { if (!form.slug && form.title) setForm((p) => ({ ...p, slug: slugify(p.title) })); }, [form.title, form.slug]);
   useEffect(() => { if (!form.title && !form.content) return; setAutosaveInfo('Autosave en progreso...'); const t = setTimeout(() => { safeWrite(`admin_article_autosave_${form.id || form.slug || 'new'}`, { ...form, autosavedAt: new Date().toISOString() }); setAutosaveInfo(`Autosave ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); }, 6000); return () => clearTimeout(t); }, [form]);
   useEffect(() => () => {
     if (internalPreview && internalPreview.startsWith('blob:')) URL.revokeObjectURL(internalPreview);
   }, [internalPreview]);
+  useEffect(() => {
+    if (!contextMenu.open) return undefined;
+    const handleOutsideClick = (event) => {
+      if (contextMenuRef.current?.contains(event.target)) return;
+      setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') setContextMenu((prev) => ({ ...prev, open: false }));
+    };
+    const closeMenu = () => setContextMenu((prev) => ({ ...prev, open: false }));
+
+    window.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleEsc);
+    window.addEventListener('resize', closeMenu);
+    window.addEventListener('scroll', closeMenu, true);
+    return () => {
+      window.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleEsc);
+      window.removeEventListener('resize', closeMenu);
+      window.removeEventListener('scroll', closeMenu, true);
+    };
+  }, [contextMenu.open]);
 
   const filtered = useMemo(() => articles.filter((a) => (a.title || '').toLowerCase().includes(search.toLowerCase()) && (statusFilter === 'all' || a.status === statusFilter)), [articles, search, statusFilter]);
+  const contentDiagnostics = useMemo(
+    () => getEditorialContentDiagnostics(form.content || ''),
+    [form.content],
+  );
+  const safePreviewHtml = useMemo(
+    () => sanitizeEditorialHtml(form.content || '<p>Sin contenido.</p>'),
+    [form.content],
+  );
 
   const clearInternalImageDraft = () => {
     setInternalFile(null);
@@ -320,7 +379,11 @@ const ArticleManagementModule = () => {
   const openArticle = (article) => {
     const autosaved = safeRead(`admin_article_autosave_${article.id || article.slug || 'new'}`, null);
     const next = autosaved && window.confirm('Se encontró autosave. ¿Restaurar?') ? { ...article, ...autosaved } : article;
-    setForm(next); setShowPreview(false); setLinkDraft({ url: '', newTab: false }); clearInternalImageDraft();
+    setForm({ ...next, content: sanitizeEditorialHtml(next.content || '<p></p>') });
+    setShowPreview(false);
+    setLinkDraft({ url: '', newTab: false });
+    setContextMenu({ open: false, x: 0, y: 0 });
+    clearInternalImageDraft();
   };
 
   const persistMeta = (id, payload) => { const store = getArticleMetaStore(); store[String(id)] = payload; saveArticleMetaStore(store); };
@@ -331,7 +394,7 @@ const ArticleManagementModule = () => {
     if (workingForm.metaTitle.length > 60 || workingForm.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
     const slug = slugify(workingForm.slug);
     const raw = editor?.getHTML() || workingForm.content;
-    const content = normalizeHtml(raw);
+    const content = sanitizeEditorialHtml(raw);
     const resolvedSignature = AUTHOR_SIGNATURES[workingForm.authorSignature] ? workingForm.authorSignature : inferAuthorSignature(workingForm.authorName);
     const resolvedAuthorName =
       AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
@@ -394,11 +457,53 @@ const ArticleManagementModule = () => {
   const updateExternalLink = (index, value) => { const next = [...form.externalLinks]; next[index] = value; setForm((p) => ({ ...p, externalLinks: next })); };
   const uploadFeatured = (event) => { const f = event.target.files?.[0]; if (!f) return; const url = URL.createObjectURL(f); setForm((p) => ({ ...p, featuredImage: url })); const next = [{ id: `${Date.now()}`, url, alt: '', name: f.name }, ...mediaLibrary].slice(0, 120); setMediaLibrary(next); saveMediaLibrary(next); };
 
+  const closeContextMenu = () => setContextMenu((prev) => ({ ...prev, open: false }));
+
+  const resolveLinkAttrs = (rawUrl, forceNewTab = false) => {
+    const href = normalizeLinkValue(rawUrl);
+    if (!href) return null;
+    const openInNewTab = forceNewTab || !isInternalUrl(href);
+    return {
+      href,
+      target: openInNewTab ? '_blank' : null,
+      rel: openInNewTab ? 'noopener noreferrer' : null,
+    };
+  };
+
   const applyLink = () => {
-    const url = linkDraft.url.trim(); if (!url) { toast({ title: 'Ingresa URL del enlace', variant: 'destructive' }); return; }
-    const isInternal = url.startsWith('/') || url.startsWith('#');
-    editor?.chain().focus().extendMarkRange('link').setLink({ href: url, target: linkDraft.newTab ? '_blank' : null, rel: !isInternal || linkDraft.newTab ? 'noopener noreferrer' : null }).run();
+    const attrs = resolveLinkAttrs(linkDraft.url, linkDraft.newTab);
+    if (!attrs?.href) {
+      toast({ title: 'Ingresa URL del enlace', variant: 'destructive' });
+      return;
+    }
+    editor
+      ?.chain()
+      .focus()
+      .extendMarkRange('link')
+      .setLink(attrs)
+      .run();
     setLinkDraft((p) => ({ ...p, url: '' }));
+  };
+
+  const promptAndApplyLink = () => {
+    if (!editor) return;
+    const currentHref = editor.getAttributes('link')?.href || linkDraft.url || '';
+    const drafted = window.prompt('URL del enlace', currentHref || 'https://');
+    if (drafted === null) return;
+    const trimmed = drafted.trim();
+    if (!trimmed) {
+      editor.chain().focus().unsetLink().run();
+      closeContextMenu();
+      return;
+    }
+    const attrs = resolveLinkAttrs(trimmed);
+    if (!attrs?.href) {
+      toast({ title: 'URL inválida', variant: 'destructive' });
+      return;
+    }
+    editor.chain().focus().extendMarkRange('link').setLink(attrs).run();
+    setLinkDraft((prev) => ({ ...prev, url: attrs.href, newTab: attrs.target === '_blank' }));
+    closeContextMenu();
   };
 
   const rememberEditorSelection = () => {
@@ -415,6 +520,41 @@ const ArticleManagementModule = () => {
         : editor.state.selection.from;
     const safePos = Math.max(1, Math.min(rawPos || 1, Math.max(1, docSize)));
     return editor.chain().focus().setTextSelection(safePos);
+  };
+
+  const runEditorAction = (action) => {
+    if (!editor) return;
+    const chain = editor.chain().focus();
+    action(chain);
+    closeContextMenu();
+  };
+
+  const handleEditorContextMenu = (event) => {
+    if (!editor) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement) || !target.closest('.ProseMirror')) return;
+    event.preventDefault();
+    const coords = editor.view.posAtCoords({ left: event.clientX, top: event.clientY });
+    if (coords?.pos) editor.chain().focus().setTextSelection(coords.pos).run();
+    rememberEditorSelection();
+    const safeX = Math.max(12, Math.min(event.clientX, window.innerWidth - 252));
+    const safeY = Math.max(12, Math.min(event.clientY, window.innerHeight - 260));
+    setContextMenu({ open: true, x: safeX, y: safeY });
+  };
+
+  const handleEditorKeyDownCapture = (event) => {
+    if (!editor) return;
+    if (!(event.ctrlKey || event.metaKey)) return;
+    const key = event.key.toLowerCase();
+    if (key === 'k') {
+      event.preventDefault();
+      promptAndApplyLink();
+      return;
+    }
+    if (key === 'y') {
+      event.preventDefault();
+      editor.chain().focus().redo().run();
+    }
   };
 
   const optimizeInternalImageFile = async (file, options = {}) => {
@@ -616,6 +756,9 @@ const ArticleManagementModule = () => {
           <h2 className="text-3xl font-bold text-slate-100">CMS avanzado de artículos</h2>
           <p className="text-sm text-slate-400">{autosaveInfo}</p>
           <p className="text-xs text-slate-500 mt-1">H1 lo controla el título. En contenido se permite H2, H3 y H4.</p>
+          <p className="text-xs text-slate-500 mt-1">
+            Formato detectado: {FORMAT_LABELS[contentDiagnostics.format] || contentDiagnostics.format} · H2 {contentDiagnostics.h2} · H3 {contentDiagnostics.h3} · UL {contentDiagnostics.ul} · OL {contentDiagnostics.ol} · Citas {contentDiagnostics.blockquote}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowPreview((v) => !v)}><Eye className="w-4 h-4 mr-2" />{showPreview ? 'Editar' : 'Vista previa'}</Button>
@@ -631,7 +774,15 @@ const ArticleManagementModule = () => {
               <div className="relative flex-1"><Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-8" placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} /></div>
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-lg border border-slate-600 bg-slate-700/50 px-2 text-sm text-slate-100"><option value="all">Todos</option>{STATUS.map((s) => <option key={s} value={s}>{s}</option>)}</select>
             </div>
-            <Button onClick={() => setForm({ ...emptyForm })}><Plus className="w-4 h-4 mr-2" />Nuevo artículo</Button>
+            <Button
+              onClick={() => {
+                setForm({ ...emptyForm });
+                setContextMenu({ open: false, x: 0, y: 0 });
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo artículo
+            </Button>
           </CardHeader>
           <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto">
             {filtered.map((a) => (
@@ -797,7 +948,78 @@ const ArticleManagementModule = () => {
                     {isOptimizingInternalImage ? 'Optimizando...' : 'Insertar imagen aquí'}
                   </Button>
                 </div>
-                <EditorContent editor={editor} className="editorial-editor" />
+                {editor ? (
+                  <BubbleMenu
+                    editor={editor}
+                    tippyOptions={{ duration: 120, placement: 'top', offset: [0, 8] }}
+                    className="editorial-bubble-menu flex flex-wrap gap-1 rounded-lg border border-slate-700 bg-slate-950/95 p-1 shadow-xl"
+                  >
+                    <button type="button" title="H2" className={btn(editor.isActive('heading', { level: 2 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 className="w-4 h-4" /></button>
+                    <button type="button" title="H3" className={btn(editor.isActive('heading', { level: 3 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><Heading3 className="w-4 h-4" /></button>
+                    <button type="button" title="Negrita" className={btn(editor.isActive('bold'))} onClick={() => editor.chain().focus().toggleBold().run()}><Bold className="w-4 h-4" /></button>
+                    <button type="button" title="Cursiva" className={btn(editor.isActive('italic'))} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic className="w-4 h-4" /></button>
+                    <button type="button" title="Subrayado" className={btn(editor.isActive('editorialUnderline'))} onClick={() => editor.chain().focus().toggleEditorialUnderline().run()}><Underline className="w-4 h-4" /></button>
+                    <button type="button" title="Enlace" className={btn(editor.isActive('link'))} onClick={promptAndApplyLink}><Link2 className="w-4 h-4" /></button>
+                  </BubbleMenu>
+                ) : null}
+
+                <div
+                  className="relative"
+                  onContextMenu={handleEditorContextMenu}
+                  onKeyDownCapture={handleEditorKeyDownCapture}
+                >
+                  <EditorContent editor={editor} className="editorial-editor" />
+                  {editor?.isEmpty ? (
+                    <p className="pointer-events-none absolute left-3 top-3 text-sm text-slate-500">
+                      Escribe aquí. Usa la barra superior, selección (bubble menu) o click derecho para formatear.
+                    </p>
+                  ) : null}
+                </div>
+
+                {contextMenu.open ? (
+                  <div
+                    ref={contextMenuRef}
+                    className="fixed z-[70] min-w-[220px] rounded-xl border border-slate-700 bg-slate-950/95 p-2 shadow-2xl"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                  >
+                    <div className="grid grid-cols-3 gap-1 border-b border-slate-800 pb-2">
+                      <button type="button" className={btn(editor?.isActive('heading', { level: 2 }))} onClick={() => runEditorAction((chain) => chain.toggleHeading({ level: 2 }).run())}><Heading2 className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('heading', { level: 3 }))} onClick={() => runEditorAction((chain) => chain.toggleHeading({ level: 3 }).run())}><Heading3 className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('heading', { level: 4 }))} onClick={() => runEditorAction((chain) => chain.toggleHeading({ level: 4 }).run())}><Heading4 className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('bold'))} onClick={() => runEditorAction((chain) => chain.toggleBold().run())}><Bold className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('italic'))} onClick={() => runEditorAction((chain) => chain.toggleItalic().run())}><Italic className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('editorialUnderline'))} onClick={() => runEditorAction((chain) => chain.toggleEditorialUnderline().run())}><Underline className="w-4 h-4" /></button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1 border-b border-slate-800 py-2">
+                      <button type="button" className={btn(editor?.isActive('bulletList'))} onClick={() => runEditorAction((chain) => chain.toggleBulletList().run())}><List className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('orderedList'))} onClick={() => runEditorAction((chain) => chain.toggleOrderedList().run())}><ListOrdered className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('blockquote'))} onClick={() => runEditorAction((chain) => chain.toggleBlockquote().run())}><Quote className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('code'))} onClick={() => runEditorAction((chain) => chain.toggleCode().run())}><Code2 className="w-4 h-4" /></button>
+                      <button type="button" className={btn(editor?.isActive('link'))} onClick={promptAndApplyLink}><Link2 className="w-4 h-4" /></button>
+                      <button type="button" className={btn(false)} onClick={() => runEditorAction((chain) => chain.unsetLink().run())}><Link2Off className="w-4 h-4" /></button>
+                    </div>
+                    <div className="pt-2 grid gap-1">
+                      <button
+                        type="button"
+                        className="rounded-md border border-slate-700 px-2 py-1.5 text-left text-xs text-slate-200 hover:bg-slate-800"
+                        onMouseDown={rememberEditorSelection}
+                        onClick={() => {
+                          quickImageInputRef.current?.click();
+                          closeContextMenu();
+                        }}
+                      >
+                        Insertar imagen
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md border border-slate-700 px-2 py-1.5 text-left text-xs text-slate-200 hover:bg-slate-800"
+                        onClick={() => runEditorAction((chain) => chain.setParagraph().run())}
+                      >
+                        Convertir a párrafo
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </CardContent>
           </Card>
@@ -813,7 +1035,7 @@ const ArticleManagementModule = () => {
                     {form.subtitle ? <p className="text-slate-600 mt-3 text-lg">{form.subtitle}</p> : null}
                   </header>
                   {form.featuredImage ? <div className="rounded-2xl overflow-hidden mb-8 border border-slate-200"><img src={form.featuredImage} alt={form.title || 'Imagen destacada'} className="w-full h-auto max-h-[420px] object-cover" /></div> : null}
-                  <div className="editorial-content" dangerouslySetInnerHTML={{ __html: normalizeHtml(form.content || '<p>Sin contenido.</p>') }} />
+                  <div className="editorial-content" dangerouslySetInnerHTML={{ __html: safePreviewHtml }} />
                 </article>
               </CardContent>
             </Card>
