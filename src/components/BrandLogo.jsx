@@ -10,10 +10,14 @@ const BrandLogo = ({ className, compact = false, showDescriptor = false, tone = 
   const descriptorClasses = isInverse ? 'text-[#7ed9bd]' : 'text-[#1E6F5C] dark:text-[#7ed9bd]';
 
   return (
-    <div className={cn('flex items-center gap-[18px]', className)}>
-      <div className={cn('inline-flex h-11 w-11 items-center justify-center rounded-[8px] p-[10px]', monogramClasses)}>
+    <div className={cn('flex items-center gap-[18px] notranslate', className)} translate="no">
+      <div
+        className={cn('inline-flex h-11 w-11 items-center justify-center rounded-[8px] p-[10px] notranslate', monogramClasses)}
+        translate="no"
+      >
         <span
-          className="translate-y-[1px] font-semibold"
+          className="translate-y-[1px] font-semibold notranslate"
+          translate="no"
           style={{
             fontFamily: "'Cormorant Garamond', Georgia, serif",
             fontSize: compact ? '1rem' : '1.08rem',

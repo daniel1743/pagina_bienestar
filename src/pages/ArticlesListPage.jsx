@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
 import { fetchPublishedArticles, getArticleTimestamp } from '@/lib/articleQueries';
+import { resolveArticleImageUrl } from '@/lib/articleImage';
 
 const normalizeSearchText = (value) =>
   String(value || '')
@@ -106,15 +107,23 @@ const ArticlesListPage = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filtered.map(article => (
+          {filtered.map((article) => {
+            const coverImageUrl = resolveArticleImageUrl(article.image_url);
+            return (
             <Link key={article.id} to={`/articulos/${article.slug}`} className="group block">
               <Card className="h-full border border-slate-100 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden bg-white">
                 <div className="aspect-video overflow-hidden">
-                  <img 
-                    src={article.image_url} 
-                    alt={article.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {coverImageUrl ? (
+                    <img
+                      src={coverImageUrl}
+                      alt={article.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-slate-100" />
+                  )}
                 </div>
                 <CardContent className="p-6 space-y-3">
                   <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{article.category}</span>
@@ -127,7 +136,8 @@ const ArticlesListPage = () => {
                 </CardContent>
               </Card>
             </Link>
-          ))}
+          );
+          })}
         </div>
 
         {filtered.length === 0 ? (

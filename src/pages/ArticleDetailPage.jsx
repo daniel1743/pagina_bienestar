@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import CommentsSection from '@/components/CommentsSection';
 import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { getLocalPublishedArticleBySlug } from '@/content/localPublishedArticles';
+import { resolveArticleImageUrl } from '@/lib/articleImage';
 import { getEditorialContentDiagnostics, sanitizeEditorialHtml } from '@/lib/editorialContent';
 
 const normalizeAuthor = (value) =>
@@ -42,6 +43,10 @@ const ArticleDetailPage = () => {
   const safePublishedHtml = useMemo(
     () => sanitizeEditorialHtml(article?.content || '<p>Contenido no disponible.</p>'),
     [article?.content],
+  );
+  const coverImageUrl = useMemo(
+    () => resolveArticleImageUrl(article?.image_url || ''),
+    [article?.image_url],
   );
 
   useEffect(() => {
@@ -141,10 +146,10 @@ const ArticleDetailPage = () => {
           </div>
         </header>
 
-        {article.image_url && (
+        {coverImageUrl && (
           <div className="rounded-3xl overflow-hidden shadow-2xl mb-16 relative aspect-video">
             <img 
-              src={article.image_url} 
+              src={coverImageUrl} 
               alt={article.title} 
               className="w-full h-full object-cover"
             />

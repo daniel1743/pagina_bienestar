@@ -20,6 +20,7 @@ import {
   saveMediaLibrary,
 } from '@/lib/adminConfig';
 import { refreshSitemapAfterPublish } from '@/lib/sitemapRefresh';
+import { resolveArticleImageUrl } from '@/lib/articleImage';
 import {
   getEditorialContentDiagnostics,
   sanitizeEditorialHtml,
@@ -282,7 +283,8 @@ const ArticleManagementModule = () => {
     const meta = getArticleMetaStore();
     const { data: rows } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
     const remote = (rows || []).map((a) => {
-      const m = meta[String(a.id)] || {};
+      const normalizedSlug = slugify(a.slug || '');
+      const m = meta[String(a.id)] || (normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {};
       const authorName = m.authorName || a.author || 'Bienestar en Claro';
       return {
         ...emptyForm,
@@ -295,15 +297,18 @@ const ArticleManagementModule = () => {
         status: normalizeStatus(m.status || a.status),
         authorName,
         authorSignature: m.authorSignature || inferAuthorSignature(authorName),
-        featuredImage: m.featuredImage || a.image_url || '',
+        featuredImage: resolveArticleImageUrl(m.featuredImage || a.image_url || ''),
         content: sanitizeEditorialHtml(m.content || a.content || '<p>Sin contenido</p>'),
       };
     });
     const dbSlugs = new Set(remote.map((a) => a.slug));
     const local = LOCAL_PUBLISHED_ARTICLES.filter((a) => !dbSlugs.has(a.slug)).map((a) => {
       const authorName = a.author || 'Bienestar en Claro';
+      const normalizedSlug = slugify(a.slug || '');
+      const m = (normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {};
       return {
         ...emptyForm,
+        ...m,
         id: a.id,
         title: a.title,
         subtitle: a.excerpt,
@@ -312,7 +317,7 @@ const ArticleManagementModule = () => {
         status: 'published',
         authorName,
         authorSignature: inferAuthorSignature(authorName),
-        featuredImage: a.image_url || '',
+        featuredImage: resolveArticleImageUrl(a.image_url || ''),
         content: sanitizeEditorialHtml(a.content || '<p>Sin contenido</p>'),
         localOnly: true,
       };
@@ -376,17 +381,83 @@ const ArticleManagementModule = () => {
     });
   };
 
-  const openArticle = (article) => {
-    const autosaved = safeRead(`admin_article_autosave_${article.id || article.slug || 'new'}`, null);
-    const next = autosaved && window.confirm('Se encontró autosave. ¿Restaurar?') ? { ...article, ...autosaved } : article;
-    setForm({ ...next, content: sanitizeEditorialHtml(next.content || '<p></p>') });
+  const buildRemoteDraft = (row) => {
+    if (!row) return null;
+    const authorName = row.author || 'Bienestar en Claro';
+    return {
+      ...emptyForm,
+      id: row.id,
+      title: row.title || '',
+      subtitle: row.excerpt || '',
+      slug: row.slug || '',
+      category: row.category || 'General',
+      status: normalizeStatus(row.status),
+      authorName,
+      authorSignature: inferAuthorSignature(authorName),
+      featuredImage: resolveArticleImageUrl(row.image_url || ''),
+      content: sanitizeEditorialHtml(row.content || '<p>Sin contenido</p>'),
+    };
+  };
+
+  const openArticle = async (article) => {
+    const normalizedSlug = slugify(article?.slug || '');
+    const metaStore = getArticleMetaStore();
+    const metaById = metaStore[String(article?.id)] || {};
+    const metaBySlug = normalizedSlug ? metaStore[`slug:${normalizedSlug}`] || {} : {};
+
+    let remoteDraft = null;
+    if (article?.id && !String(article.id).startsWith('local-')) {
+      try {
+        const { data, error } = await supabase.from('articles').select('*').eq('id', article.id).maybeSingle();
+        if (error) throw error;
+        remoteDraft = buildRemoteDraft(data);
+      } catch {
+        remoteDraft = null;
+      }
+    }
+
+    const source = {
+      ...emptyForm,
+      ...article,
+      ...(remoteDraft || {}),
+      ...metaBySlug,
+      ...metaById,
+    };
+    const autosaveKey = `admin_article_autosave_${source.id || source.slug || 'new'}`;
+    const autosaved = safeRead(autosaveKey, null);
+    const next =
+      autosaved && window.confirm('Se encontró autosave. ¿Restaurar?')
+        ? { ...source, ...autosaved }
+        : source;
+
+    setForm({
+      ...next,
+      slug: slugify(next.slug || next.title),
+      featuredImage: resolveArticleImageUrl(next.featuredImage || next.image_url || ''),
+      content: sanitizeEditorialHtml(next.content || '<p></p>'),
+    });
     setShowPreview(false);
     setLinkDraft({ url: '', newTab: false });
     setContextMenu({ open: false, x: 0, y: 0 });
     clearInternalImageDraft();
   };
 
-  const persistMeta = (id, payload) => { const store = getArticleMetaStore(); store[String(id)] = payload; saveArticleMetaStore(store); };
+  const persistMeta = (id, payload) => {
+    const store = getArticleMetaStore();
+    const normalizedSlug = slugify(payload?.slug || '');
+    const resolvedId = id || payload?.id || null;
+    if (resolvedId) {
+      Object.keys(store).forEach((key) => {
+        if (!key.startsWith('slug:')) return;
+        if (String(store[key]?.id || '') === String(resolvedId) && key !== `slug:${normalizedSlug}`) {
+          delete store[key];
+        }
+      });
+      store[String(resolvedId)] = payload;
+    }
+    if (normalizedSlug) store[`slug:${normalizedSlug}`] = { ...payload, id: resolvedId };
+    saveArticleMetaStore(store);
+  };
 
   const saveArticle = async (overrides = {}) => {
     const workingForm = { ...form, ...overrides };
@@ -399,13 +470,21 @@ const ArticleManagementModule = () => {
     const resolvedAuthorName =
       AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
     if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
+    const safeFeaturedImage = resolveArticleImageUrl(workingForm.featuredImage || '');
+    if (workingForm.featuredImage && !safeFeaturedImage) {
+      toast({
+        title: 'Imagen destacada temporal detectada',
+        description: 'La imagen anterior era temporal. Vuelve a subirla para guardarla de forma permanente.',
+        variant: 'destructive',
+      });
+    }
     const payload = {
       title: workingForm.title,
       slug,
       excerpt: workingForm.subtitle,
       content,
       category: workingForm.category,
-      image_url: workingForm.featuredImage || null,
+      image_url: safeFeaturedImage || null,
       author: resolvedAuthorName,
       status: workingForm.status,
       published_at:
@@ -431,6 +510,7 @@ const ArticleManagementModule = () => {
       id,
       slug,
       content,
+      featuredImage: safeFeaturedImage || '',
       authorSignature: resolvedSignature,
       authorName: resolvedAuthorName,
       localOnly: String(id).startsWith('local-'),
@@ -449,13 +529,58 @@ const ArticleManagementModule = () => {
   const deleteArticle = async (article) => {
     if (!window.confirm(`Eliminar ${article.title}?`)) return;
     if (!String(article.id).startsWith('local-')) await supabase.from('articles').delete().eq('id', article.id);
-    const store = getArticleMetaStore(); delete store[String(article.id)]; saveArticleMetaStore(store);
+    const store = getArticleMetaStore();
+    delete store[String(article.id)];
+    const normalizedSlug = slugify(article?.slug || '');
+    if (normalizedSlug) delete store[`slug:${normalizedSlug}`];
+    saveArticleMetaStore(store);
     setArticles((prev) => prev.filter((a) => String(a.id) !== String(article.id))); if (String(form.id) === String(article.id)) setForm({ ...emptyForm });
   };
 
-  const duplicate = (article) => setForm({ ...article, id: null, title: `${article.title} (Copia)`, slug: `${article.slug}-copia-${Date.now().toString().slice(-4)}`, status: 'draft' });
+  const duplicate = (article) =>
+    setForm({
+      ...article,
+      id: null,
+      title: `${article.title} (Copia)`,
+      slug: `${article.slug}-copia-${Date.now().toString().slice(-4)}`,
+      status: 'draft',
+      featuredImage: resolveArticleImageUrl(article.featuredImage || article.image_url || ''),
+    });
   const updateExternalLink = (index, value) => { const next = [...form.externalLinks]; next[index] = value; setForm((p) => ({ ...p, externalLinks: next })); };
-  const uploadFeatured = (event) => { const f = event.target.files?.[0]; if (!f) return; const url = URL.createObjectURL(f); setForm((p) => ({ ...p, featuredImage: url })); const next = [{ id: `${Date.now()}`, url, alt: '', name: f.name }, ...mediaLibrary].slice(0, 120); setMediaLibrary(next); saveMediaLibrary(next); };
+  const uploadFeatured = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const optimizedResult = await optimizeInternalImageFile(file, { showServerFallbackToast: false });
+      const persistentUrl = await toDataUrl(optimizedResult.file);
+      setForm((p) => ({ ...p, featuredImage: persistentUrl }));
+      setMediaLibrary((prev) => {
+        const next = [
+          {
+            id: `${Date.now()}`,
+            url: persistentUrl,
+            alt: defaultAltFromFileName(file.name),
+            name: optimizedResult.file.name || file.name,
+          },
+          ...prev,
+        ].slice(0, 120);
+        saveMediaLibrary(next);
+        return next;
+      });
+      toast({
+        title: 'Imagen destacada optimizada',
+        description: `${(optimizedResult.bytes / 1024).toFixed(1)}KB · WebP`,
+      });
+    } catch (error) {
+      toast({
+        title: 'No se pudo procesar la imagen destacada',
+        description: error.message || 'Intenta con otra imagen.',
+        variant: 'destructive',
+      });
+    } finally {
+      event.target.value = '';
+    }
+  };
 
   const closeContextMenu = () => setContextMenu((prev) => ({ ...prev, open: false }));
 
@@ -634,18 +759,27 @@ const ArticleManagementModule = () => {
 
     const src = await toDataUrl(renamedFile);
     const display = displayMode === 'caption' ? 'center' : displayMode;
+    const imageAttrs = {
+      src,
+      alt: finalAlt,
+      title: caption.trim() || finalAlt,
+      display,
+      width: width || null,
+      height: height || null,
+    };
     const chain = editorChainAtLastSelection();
-    if (!chain) return false;
-    chain
-      .setImage({
-        src,
-        alt: finalAlt,
-        title: caption.trim() || finalAlt,
-        display,
-        width: width || null,
-        height: height || null,
-      })
-      .run();
+    const insertedAtRememberedSelection = chain ? chain.setImage(imageAttrs).run() : false;
+    const insertedAtCurrentSelection = insertedAtRememberedSelection
+      ? true
+      : editor.chain().focus().setImage(imageAttrs).run();
+    if (!insertedAtCurrentSelection) {
+      toast({
+        title: 'No se pudo insertar la imagen',
+        description: 'Intenta ubicar el cursor nuevamente y repetir.',
+        variant: 'destructive',
+      });
+      return false;
+    }
 
     if (displayMode === 'caption') {
       editor.chain().focus().insertContent(`<p><em>${escapeHtml(caption.trim() || finalAlt)}</em></p>`).run();
@@ -765,6 +899,15 @@ const ArticleManagementModule = () => {
           <Button onClick={saveArticle}><Save className="w-4 h-4 mr-2" />Guardar</Button>
           <Button className="bg-emerald-600 hover:bg-emerald-500 text-white" onClick={publishArticleNow}>Publicar ahora</Button>
         </div>
+      </div>
+
+      <div className="fixed bottom-5 right-5 z-[65]">
+        <Button
+          className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl"
+          onClick={publishArticleNow}
+        >
+          Publicar ahora
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">

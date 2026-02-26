@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { getGlobalSettings } from '@/lib/adminConfig';
 import { mergeWithLocalPublishedArticles } from '@/content/localPublishedArticles';
 import { fetchPublishedArticles, getArticleTimestamp } from '@/lib/articleQueries';
+import { resolveArticleImageUrl } from '@/lib/articleImage';
 
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
@@ -89,15 +90,18 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 transition-colors duration-300 dark:bg-background dark:text-foreground">
       <Helmet>
-        <title>Bienestar en Claro | Bienestar basado en evidencia</title>
+        <title>Salud metabólica en Chile | Hígado graso, obesidad y resistencia a la insulina</title>
         <meta
           name="description"
-          content="Divulgación sobre metabolismo, inflamación y salud hepática con enfoque latinoamericano, sin exageraciones."
+          content="Información clara sobre hígado graso, obesidad, diabetes y resistencia a la insulina en Chile. Salud basada en evidencia científica."
         />
-        <meta property="og:title" content="Bienestar en Claro | Bienestar basado en evidencia" />
+        <meta
+          property="og:title"
+          content="Salud metabólica en Chile | Hígado graso, obesidad y resistencia a la insulina"
+        />
         <meta
           property="og:description"
-          content="Información editorial sobre salud metabólica, explicada con claridad y límites explícitos."
+          content="Información clara sobre hígado graso, obesidad, diabetes y resistencia a la insulina en Chile. Salud basada en evidencia científica."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={siteUrl} />
@@ -373,9 +377,9 @@ const HomePage = () => {
               <Link key={article.id || article.slug} to={`/articulos/${article.slug}`} className="group block">
                 <Card className="flex h-full flex-col overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md dark:border-border dark:bg-card">
                   <div className="aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-muted">
-                    {article.image_url ? (
+                    {resolveArticleImageUrl(article.image_url) ? (
                       <img
-                        src={article.image_url}
+                        src={resolveArticleImageUrl(article.image_url)}
                         alt={article.title}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         loading="lazy"

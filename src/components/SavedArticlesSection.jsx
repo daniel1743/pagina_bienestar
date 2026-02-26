@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUserProfile } from '@/contexts/UserProfileContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { BookmarkMinus, BookOpen, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { resolveArticleImageUrl } from '@/lib/articleImage';
 
 const SavedArticlesSection = ({ userId, isOwner }) => {
   const { fetchSavedArticles } = useUserProfile();
@@ -14,16 +15,16 @@ const SavedArticlesSection = ({ userId, isOwner }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadSaved();
-  }, [userId]);
-
-  const loadSaved = async () => {
+  const loadSaved = useCallback(async () => {
     setLoading(true);
     const data = await fetchSavedArticles(userId);
     setSaved(data);
     setLoading(false);
-  };
+  }, [fetchSavedArticles, userId]);
+
+  useEffect(() => {
+    loadSaved();
+  }, [loadSaved]);
 
   const removeSaved = async (id) => {
     try {
@@ -54,8 +55,8 @@ const SavedArticlesSection = ({ userId, isOwner }) => {
         articles && (
           <Card key={id} className="h-full border-border bg-card shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden flex flex-col group">
             <Link to={`/articulos/${articles.slug}`} className="block relative aspect-video bg-muted overflow-hidden">
-              {articles.image_url ? (
-                <img src={articles.image_url} alt={articles.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              {resolveArticleImageUrl(articles.image_url) ? (
+                <img src={resolveArticleImageUrl(articles.image_url)} alt={articles.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center"><BookOpen className="w-8 h-8 text-muted-foreground/30" /></div>
               )}
