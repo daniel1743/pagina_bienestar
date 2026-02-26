@@ -47,7 +47,7 @@ const DANGEROUS_TAGS = new Set([
 const GLOBAL_ATTRS = new Set(['class']);
 const TAG_ATTRS = {
   a: new Set(['href', 'title', 'target', 'rel']),
-  img: new Set(['src', 'alt', 'title', 'width', 'height', 'loading', 'decoding', 'class', 'data-display']),
+  img: new Set(['src', 'alt', 'width', 'height', 'loading', 'decoding', 'class', 'data-display']),
   figure: new Set(['class']),
   figcaption: new Set(['class']),
   section: new Set(['class', 'data-editorial-callout']),
@@ -182,6 +182,7 @@ const sanitizeAttributes = (element) => {
     element.setAttribute('src', src);
     element.setAttribute('loading', 'lazy');
     element.setAttribute('decoding', 'async');
+    element.removeAttribute('title');
     if (!element.hasAttribute('alt')) element.setAttribute('alt', 'Imagen');
 
     ['width', 'height'].forEach((sizeAttr) => {

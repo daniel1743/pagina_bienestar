@@ -137,6 +137,11 @@ const defaultAltFromFileName = (rawName) => {
   if (!cleaned) return 'Imagen editorial';
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 };
+const normalizeImageText = (value, maxLength = 140) =>
+  String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
 const canvasToWebpBlob = (canvas, quality) =>
   new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -741,7 +746,8 @@ const ArticleManagementModule = () => {
       return false;
     }
 
-    const finalAlt = (alt || '').trim() || defaultAltFromFileName(imageFile.name);
+    const finalAlt = normalizeImageText((alt || '').trim() || defaultAltFromFileName(imageFile.name));
+    const safeTitle = normalizeImageText(caption.trim(), 180);
     const seoNameSource = finalAlt || caption.trim() || imageFile.name;
     const renamedFile = new File([imageFile], seoWebpName(seoNameSource), {
       type: 'image/webp',
@@ -762,7 +768,7 @@ const ArticleManagementModule = () => {
     const imageAttrs = {
       src,
       alt: finalAlt,
-      title: caption.trim() || finalAlt,
+      title: safeTitle || null,
       display,
       width: width || null,
       height: height || null,
