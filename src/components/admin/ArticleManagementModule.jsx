@@ -522,7 +522,31 @@ const ArticleManagementModule = () => {
     };
     persistMeta(id, next); logAdminAction('Artículo guardado', { id, title: workingForm.title }); toast({ title: workingForm.status === 'published' ? 'Artículo publicado' : 'Artículo guardado' });
     if (savedRemotely && workingForm.status === 'published') {
-      try { const r = await refreshSitemapAfterPublish(); toast({ title: r.mode === 'build-only' ? 'Artículo publicado' : 'Sitemap actualizado', description: r.mode === 'build-only' ? 'El sitemap se actualizará en el próximo deploy/build.' : 'Se disparó actualización automática.' }); } catch { toast({ title: 'Artículo publicado', description: 'No se pudo disparar refresh remoto del sitemap. Se actualizará en el próximo deploy.', variant: 'destructive' }); }
+      try {
+        const r = await refreshSitemapAfterPublish();
+        if (r.mode === 'dynamic') {
+          toast({
+            title: 'Sitemap dinámico',
+            description: 'El artículo quedará disponible en sitemap sin esperar deploy.',
+          });
+        } else if (r.mode === 'build-only') {
+          toast({
+            title: 'Artículo publicado',
+            description: 'El sitemap se actualizará en el próximo deploy/build.',
+          });
+        } else {
+          toast({
+            title: 'Sitemap actualizado',
+            description: 'Se disparó actualización automática.',
+          });
+        }
+      } catch {
+        toast({
+          title: 'Artículo publicado',
+          description: 'No se pudo disparar refresh remoto del sitemap. Se actualizará en el próximo deploy.',
+          variant: 'destructive',
+        });
+      }
     }
     setForm(next); await loadData();
   };

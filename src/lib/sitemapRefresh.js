@@ -21,7 +21,7 @@ export const refreshSitemapAfterPublish = async () => {
   }
 
   if (!functionName) {
-    return { mode: 'build-only' };
+    return { mode: 'dynamic' };
   }
 
   const { error } = await supabase.functions.invoke(functionName, {

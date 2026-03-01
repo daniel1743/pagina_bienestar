@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/((?!assets/|favicon.ico|robots.txt|sitemap.xml|llms.txt).*)",
       "destination": "/index.html"
     }
@@ -20,7 +24,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=3600"
+          "value": "public, max-age=0, s-maxage=0, must-revalidate"
         }
       ]
     }
