@@ -64,21 +64,25 @@ const fetchPublishedArticles = async () => {
   try {
     const { data, error } = await supabase
       .from('articles')
-      .select('slug,created_at,updated_at,published_at,status')
+      .select('slug,created_at,updated_at,published_at,status,no_index')
       .limit(5000);
     if (error) throw error;
     rows = (data || []).filter((item) => {
       const status = String(item?.status || '').toLowerCase();
-      return PUBLISHED_STATUS_VALUES.includes(status);
+      return PUBLISHED_STATUS_VALUES.includes(status) && !item?.no_index;
     });
-  } catch {
-    const { data, error } = await supabase
+  } catch (error) {
+    console.error('[sitemap] primary query failed', error);
+    const { data, error: fallbackError } = await supabase
       .from('articles')
-      .select('slug,created_at,updated_at,published_at')
+      .select('slug,created_at,updated_at,published_at,no_index')
       .not('published_at', 'is', null)
       .limit(5000);
-    if (error) throw error;
-    rows = (data || []).filter((item) => item?.published_at);
+    if (fallbackError) {
+      console.error('[sitemap] fallback query failed', fallbackError);
+      throw fallbackError;
+    }
+    rows = (data || []).filter((item) => item?.published_at && !item?.no_index);
   }
 
   return rows
@@ -110,14 +114,23 @@ export default async function handler(req, res) {
       priority: index === 0 ? '1.0' : '0.7',
     }));
 
-    const localArticleUrls = LOCAL_PUBLISHED_ARTICLES.map((item) => ({
+    const localArticleUrls = LOCAL_PUBLISHED_ARTICLES
+      .filter((item) => !item?.no_index)
+      .map((item) => ({
       loc: `${SITE_URL}/articulos/${item.slug}`,
       lastmod: item.updated_at || item.published_at || item.created_at || new Date().toISOString(),
       changefreq: 'weekly',
       priority: '0.8',
     }));
 
-    const remoteArticleUrls = await fetchPublishedArticles();
+    let sitemapMode = 'full';
+    let remoteArticleUrls = [];
+    try {
+      remoteArticleUrls = await fetchPublishedArticles();
+    } catch (remoteError) {
+      sitemapMode = 'fallback';
+      console.error('[sitemap] unable to load remote articles', remoteError);
+    }
 
     const uniqueByLoc = new Map();
     [...staticUrls, ...localArticleUrls, ...remoteArticleUrls].forEach((item) => {
@@ -128,8 +141,10 @@ export default async function handler(req, res) {
     const xml = buildSitemapXml(Array.from(uniqueByLoc.values()));
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=0, must-revalidate');
+    res.setHeader('X-Sitemap-Mode', sitemapMode);
     return res.status(200).send(xml);
   } catch (error) {
+    console.error('[sitemap] fatal handler error', error);
     const fallbackXml = buildSitemapXml(
       STATIC_PATHS.map((route, index) => ({
         loc: `${SITE_URL}${route}`,
@@ -140,6 +155,7 @@ export default async function handler(req, res) {
     );
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=0, must-revalidate');
+    res.setHeader('X-Sitemap-Mode', 'fallback');
     return res.status(200).send(fallbackXml);
   }
 }

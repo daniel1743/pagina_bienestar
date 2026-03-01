@@ -12,6 +12,8 @@ import { getLocalPublishedArticleBySlug } from '@/content/localPublishedArticles
 import { resolveArticleImageUrl } from '@/lib/articleImage';
 import { getEditorialContentDiagnostics, sanitizeEditorialHtml } from '@/lib/editorialContent';
 
+const SITE_URL = String(import.meta.env.VITE_SITE_URL || 'https://bienestarenclaro.com').replace(/\/$/, '');
+
 const normalizeAuthor = (value) =>
   String(value || '')
     .toLowerCase()
@@ -25,6 +27,13 @@ const getAuthorPresentation = (authorName) => {
     return { name: 'Daniel Falcón', avatar: '/images/DANIEL_FALCON.jpeg' };
   }
   return { name: 'Bienestar en Claro', avatar: '/branding/monogram-bc-180.png' };
+};
+
+const buildCanonicalUrl = (canonicalUrl, slug) => {
+  const raw = String(canonicalUrl || '').trim();
+  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+  if (raw.startsWith('/')) return `${SITE_URL}${raw}`;
+  return `${SITE_URL}/articulos/${slug}`;
 };
 
 const ArticleDetailPage = () => {
@@ -47,6 +56,26 @@ const ArticleDetailPage = () => {
   const coverImageUrl = useMemo(
     () => resolveArticleImageUrl(article?.image_url || ''),
     [article?.image_url],
+  );
+  const seoTitle = useMemo(
+    () => {
+      if (article?.meta_title) return article.meta_title;
+      if (article?.title) return `${article.title} - Bienestar en Claro`;
+      return 'Bienestar en Claro';
+    },
+    [article?.meta_title, article?.title],
+  );
+  const seoDescription = useMemo(
+    () => article?.meta_description || article?.excerpt || '',
+    [article?.meta_description, article?.excerpt],
+  );
+  const canonicalUrl = useMemo(
+    () => buildCanonicalUrl(article?.canonical_url, article?.slug || slug),
+    [article?.canonical_url, article?.slug, slug],
+  );
+  const robotsContent = useMemo(
+    () => (article?.no_index ? 'noindex, nofollow' : 'index, follow'),
+    [article?.no_index],
   );
 
   useEffect(() => {
@@ -104,8 +133,10 @@ const ArticleDetailPage = () => {
   return (
     <div className="min-h-screen bg-background py-16 transition-colors duration-300">
       <Helmet>
-        <title>{article.title} - Bienestar en Claro</title>
-        <meta name="description" content={article.excerpt} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta name="robots" content={robotsContent} />
       </Helmet>
       
       <article className="container mx-auto px-4 max-w-4xl">

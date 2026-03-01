@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import {
 } from '@/lib/adminConfig';
 import { refreshSitemapAfterPublish } from '@/lib/sitemapRefresh';
 import { resolveArticleImageUrl } from '@/lib/articleImage';
+import { isDataImageUrl, uploadImageToStorage } from '@/lib/articleMediaStorage';
 import {
   getEditorialContentDiagnostics,
   sanitizeEditorialHtml,
@@ -129,6 +131,16 @@ const normalizeLinkValue = (raw) => {
   }
   return `https://${value}`;
 };
+const normalizeCanonicalUrl = (raw) => {
+  const value = String(raw || '').trim();
+  if (!value) return null;
+  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  if (value.startsWith('/')) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bienestarenclaro.com';
+    return `${origin}${value}`;
+  }
+  return `https://${value}`;
+};
 const isInternalUrl = (url) =>
   url.startsWith('/') || url.startsWith('#') || url.startsWith('./') || url.startsWith('../');
 const seoWebpName = (raw) => `${slugify((raw || '').replace(/\.[^/.]+$/, '')) || 'imagen-editorial'}.webp`;
@@ -142,6 +154,46 @@ const normalizeImageText = (value, maxLength = 140) =>
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength);
+const INTERNAL_LINK_STOPWORDS = new Set([
+  'a', 'al', 'algo', 'como', 'con', 'de', 'del', 'desde', 'donde', 'el', 'ella', 'ellas', 'ellos',
+  'en', 'entre', 'es', 'esta', 'este', 'esto', 'ha', 'hacia', 'hay', 'la', 'las', 'lo', 'los',
+  'mas', 'mi', 'mis', 'no', 'o', 'para', 'pero', 'por', 'porque', 'que', 'se', 'sin', 'si',
+  'sobre', 'su', 'sus', 'te', 'tu', 'tus', 'un', 'una', 'uno', 'unos', 'unas', 'y', 'ya',
+]);
+const INTERNAL_LINK_WEIGHTS = {
+  sameCategory: 8,
+  focusInTitle: 10,
+  focusInSubtitle: 6,
+  focusTokenMatch: 2,
+  generalKeywordMatch: 1,
+};
+const normalizeSearchText = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+const extractKeywords = (value) => {
+  const raw = normalizeSearchText(value);
+  const words = raw
+    .split(/\s+/)
+    .filter((word) => word.length >= 3 && !INTERNAL_LINK_STOPWORDS.has(word));
+  return Array.from(new Set(words));
+};
+const stripSeoMetaFields = (value) => {
+  const next = { ...(value || {}) };
+  delete next.metaTitle;
+  delete next.metaDescription;
+  delete next.canonical;
+  delete next.noIndex;
+  delete next.focusKeyword;
+  delete next.secondaryKeywords;
+  return next;
+};
+const articleInternalUrl = (slug) => `/articulos/${slug}`;
 const canvasToWebpBlob = (canvas, quality) =>
   new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -247,6 +299,7 @@ const optimizeToWebpWithEdgeFunction = async (file) => {
 
 const ArticleManagementModule = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [form, setForm] = useState({ ...emptyForm });
   const [search, setSearch] = useState('');
@@ -289,7 +342,7 @@ const ArticleManagementModule = () => {
     const { data: rows } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
     const remote = (rows || []).map((a) => {
       const normalizedSlug = slugify(a.slug || '');
-      const m = meta[String(a.id)] || (normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {};
+      const m = stripSeoMetaFields(meta[String(a.id)] || (normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {});
       const authorName = m.authorName || a.author || 'Bienestar en Claro';
       return {
         ...emptyForm,
@@ -302,15 +355,21 @@ const ArticleManagementModule = () => {
         status: normalizeStatus(m.status || a.status),
         authorName,
         authorSignature: m.authorSignature || inferAuthorSignature(authorName),
-        featuredImage: resolveArticleImageUrl(m.featuredImage || a.image_url || ''),
+        featuredImage: resolveArticleImageUrl(a.image_url || m.featuredImage || ''),
         content: sanitizeEditorialHtml(m.content || a.content || '<p>Sin contenido</p>'),
+        metaTitle: a.meta_title || '',
+        metaDescription: a.meta_description || '',
+        canonical: a.canonical_url || '',
+        noIndex: Boolean(a.no_index),
+        focusKeyword: a.focus_keyword || '',
+        secondaryKeywords: a.secondary_keywords || '',
       };
     });
     const dbSlugs = new Set(remote.map((a) => a.slug));
     const local = LOCAL_PUBLISHED_ARTICLES.filter((a) => !dbSlugs.has(a.slug)).map((a) => {
       const authorName = a.author || 'Bienestar en Claro';
       const normalizedSlug = slugify(a.slug || '');
-      const m = (normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {};
+      const m = stripSeoMetaFields((normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {});
       return {
         ...emptyForm,
         ...m,
@@ -369,6 +428,71 @@ const ArticleManagementModule = () => {
     () => getEditorialContentDiagnostics(form.content || ''),
     [form.content],
   );
+  const currentKeywordPool = useMemo(() => {
+    const joined = [
+      form.title,
+      form.subtitle,
+      form.focusKeyword,
+      form.secondaryKeywords,
+      form.category,
+      String(form.content || '').slice(0, 2000),
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return extractKeywords(joined);
+  }, [
+    form.title,
+    form.subtitle,
+    form.focusKeyword,
+    form.secondaryKeywords,
+    form.category,
+    form.content,
+  ]);
+  const internalLinkSuggestions = useMemo(() => {
+    const currentSlug = slugify(form.slug || form.title);
+    const normalizedFocusKeyword = normalizeSearchText(form.focusKeyword);
+    const focusTokens = extractKeywords(normalizedFocusKeyword);
+    return articles
+      .filter((item) => {
+        if (!item?.slug) return false;
+        if (slugify(item.slug) === currentSlug) return false;
+        return normalizeStatus(item.status) === 'published';
+      })
+      .map((item) => {
+        const candidateKeywords = new Set([
+          ...extractKeywords(item.title),
+          ...extractKeywords(item.subtitle || item.excerpt || ''),
+          ...extractKeywords(item.category),
+        ]);
+        const normalizedTitle = normalizeSearchText(item.title);
+        const normalizedSubtitle = normalizeSearchText(item.subtitle || item.excerpt || '');
+        let score = 0;
+        if (form.category && item.category && String(form.category) === String(item.category)) {
+          score += INTERNAL_LINK_WEIGHTS.sameCategory;
+        }
+        if (normalizedFocusKeyword && normalizedTitle.includes(normalizedFocusKeyword)) {
+          score += INTERNAL_LINK_WEIGHTS.focusInTitle;
+        }
+        if (normalizedFocusKeyword && normalizedSubtitle.includes(normalizedFocusKeyword)) {
+          score += INTERNAL_LINK_WEIGHTS.focusInSubtitle;
+        }
+        focusTokens.forEach((token) => {
+          if (candidateKeywords.has(token)) score += INTERNAL_LINK_WEIGHTS.focusTokenMatch;
+        });
+        currentKeywordPool.forEach((word) => {
+          if (candidateKeywords.has(word)) score += INTERNAL_LINK_WEIGHTS.generalKeywordMatch;
+        });
+        return {
+          ...item,
+          relevance: score,
+          href: articleInternalUrl(item.slug),
+          timestamp: new Date(item.updated_at || item.published_at || item.created_at || 0).getTime(),
+        };
+      })
+      .filter((item) => item.relevance > 0)
+      .sort((a, b) => b.relevance - a.relevance || b.timestamp - a.timestamp)
+      .slice(0, 6);
+  }, [articles, form.slug, form.title, form.category, form.focusKeyword, currentKeywordPool]);
   const safePreviewHtml = useMemo(
     () => sanitizeEditorialHtml(form.content || '<p>Sin contenido.</p>'),
     [form.content],
@@ -401,14 +525,20 @@ const ArticleManagementModule = () => {
       authorSignature: inferAuthorSignature(authorName),
       featuredImage: resolveArticleImageUrl(row.image_url || ''),
       content: sanitizeEditorialHtml(row.content || '<p>Sin contenido</p>'),
+      metaTitle: row.meta_title || '',
+      metaDescription: row.meta_description || '',
+      canonical: row.canonical_url || '',
+      noIndex: Boolean(row.no_index),
+      focusKeyword: row.focus_keyword || '',
+      secondaryKeywords: row.secondary_keywords || '',
     };
   };
 
   const openArticle = async (article) => {
     const normalizedSlug = slugify(article?.slug || '');
     const metaStore = getArticleMetaStore();
-    const metaById = metaStore[String(article?.id)] || {};
-    const metaBySlug = normalizedSlug ? metaStore[`slug:${normalizedSlug}`] || {} : {};
+    const metaById = stripSeoMetaFields(metaStore[String(article?.id)] || {});
+    const metaBySlug = stripSeoMetaFields(normalizedSlug ? metaStore[`slug:${normalizedSlug}`] || {} : {});
 
     let remoteDraft = null;
     if (article?.id && !String(article.id).startsWith('local-')) {
@@ -438,7 +568,7 @@ const ArticleManagementModule = () => {
     setForm({
       ...next,
       slug: slugify(next.slug || next.title),
-      featuredImage: resolveArticleImageUrl(next.featuredImage || next.image_url || ''),
+      featuredImage: resolveArticleImageUrl(next.image_url || next.featuredImage || ''),
       content: sanitizeEditorialHtml(next.content || '<p></p>'),
     });
     setShowPreview(false);
@@ -448,9 +578,10 @@ const ArticleManagementModule = () => {
   };
 
   const persistMeta = (id, payload) => {
+    const sanitizedPayload = stripSeoMetaFields(payload);
     const store = getArticleMetaStore();
-    const normalizedSlug = slugify(payload?.slug || '');
-    const resolvedId = id || payload?.id || null;
+    const normalizedSlug = slugify(sanitizedPayload?.slug || '');
+    const resolvedId = id || sanitizedPayload?.id || null;
     if (resolvedId) {
       Object.keys(store).forEach((key) => {
         if (!key.startsWith('slug:')) return;
@@ -458,15 +589,15 @@ const ArticleManagementModule = () => {
           delete store[key];
         }
       });
-      store[String(resolvedId)] = payload;
+      store[String(resolvedId)] = sanitizedPayload;
     }
-    if (normalizedSlug) store[`slug:${normalizedSlug}`] = { ...payload, id: resolvedId };
+    if (normalizedSlug) store[`slug:${normalizedSlug}`] = { ...sanitizedPayload, id: resolvedId };
     saveArticleMetaStore(store);
   };
 
   const saveArticle = async (overrides = {}) => {
     const workingForm = { ...form, ...overrides };
-    if (!workingForm.title.trim() || !workingForm.slug.trim()) { toast({ title: 'Título y slug obligatorios', variant: 'destructive' }); return; }
+    if (!workingForm.title.trim() || !workingForm.slug.trim()) { toast({ title: 'Título y slug obligatorios', variant: 'destructive' }); return null; }
     if (workingForm.metaTitle.length > 60 || workingForm.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
     const slug = slugify(workingForm.slug);
     const raw = editor?.getHTML() || workingForm.content;
@@ -476,12 +607,21 @@ const ArticleManagementModule = () => {
       AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
     if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
     const safeFeaturedImage = resolveArticleImageUrl(workingForm.featuredImage || '');
+    const canonicalUrl = normalizeCanonicalUrl(workingForm.canonical);
     if (workingForm.featuredImage && !safeFeaturedImage) {
       toast({
         title: 'Imagen destacada temporal detectada',
         description: 'La imagen anterior era temporal. Vuelve a subirla para guardarla de forma permanente.',
         variant: 'destructive',
       });
+    }
+    if (isDataImageUrl(safeFeaturedImage) || /data:image\//i.test(content)) {
+      toast({
+        title: 'Base64 no permitido',
+        description: 'Convierte imágenes a Storage antes de guardar el artículo.',
+        variant: 'destructive',
+      });
+      return null;
     }
     const payload = {
       title: workingForm.title,
@@ -492,6 +632,12 @@ const ArticleManagementModule = () => {
       image_url: safeFeaturedImage || null,
       author: resolvedAuthorName,
       status: workingForm.status,
+      meta_title: workingForm.metaTitle?.trim() || null,
+      meta_description: workingForm.metaDescription?.trim() || null,
+      canonical_url: canonicalUrl,
+      no_index: Boolean(workingForm.noIndex),
+      focus_keyword: workingForm.focusKeyword?.trim() || null,
+      secondary_keywords: workingForm.secondaryKeywords?.trim() || null,
       published_at:
         workingForm.status === 'published'
           ? new Date().toISOString()
@@ -516,6 +662,12 @@ const ArticleManagementModule = () => {
       slug,
       content,
       featuredImage: safeFeaturedImage || '',
+      canonical: canonicalUrl || '',
+      metaTitle: payload.meta_title || '',
+      metaDescription: payload.meta_description || '',
+      noIndex: Boolean(payload.no_index),
+      focusKeyword: payload.focus_keyword || '',
+      secondaryKeywords: payload.secondary_keywords || '',
       authorSignature: resolvedSignature,
       authorName: resolvedAuthorName,
       localOnly: String(id).startsWith('local-'),
@@ -549,10 +701,27 @@ const ArticleManagementModule = () => {
       }
     }
     setForm(next); await loadData();
+    return {
+      id,
+      slug,
+      localOnly: String(id).startsWith('local-'),
+      savedRemotely,
+      status: workingForm.status,
+    };
   };
 
   const publishArticleNow = async () => {
-    await saveArticle({ status: 'published', scheduledAt: '' });
+    const saved = await saveArticle({ status: 'published', scheduledAt: '' });
+    if (!saved?.slug) return;
+    if (saved.localOnly) {
+      toast({
+        title: 'Publicado localmente',
+        description: 'No se pudo abrir vista pública porque no se guardó en servidor.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    navigate(articleInternalUrl(saved.slug));
   };
 
   const deleteArticle = async (article) => {
@@ -581,13 +750,16 @@ const ArticleManagementModule = () => {
     if (!file) return;
     try {
       const optimizedResult = await optimizeInternalImageFile(file, { showServerFallbackToast: false });
-      const persistentUrl = await toDataUrl(optimizedResult.file);
-      setForm((p) => ({ ...p, featuredImage: persistentUrl }));
+      const { publicUrl } = await uploadImageToStorage(optimizedResult.file, {
+        slug: slugify(form.slug || form.title || 'articulo'),
+        kind: 'featured',
+      });
+      setForm((p) => ({ ...p, featuredImage: publicUrl }));
       setMediaLibrary((prev) => {
         const next = [
           {
             id: `${Date.now()}`,
-            url: persistentUrl,
+            url: publicUrl,
             alt: defaultAltFromFileName(file.name),
             name: optimizedResult.file.name || file.name,
           },
@@ -597,8 +769,8 @@ const ArticleManagementModule = () => {
         return next;
       });
       toast({
-        title: 'Imagen destacada optimizada',
-        description: `${(optimizedResult.bytes / 1024).toFixed(1)}KB · WebP`,
+        title: 'Imagen destacada subida',
+        description: `${(optimizedResult.bytes / 1024).toFixed(1)}KB · WebP · Storage`,
       });
     } catch (error) {
       toast({
@@ -787,7 +959,21 @@ const ArticleManagementModule = () => {
       return false;
     }
 
-    const src = await toDataUrl(renamedFile);
+    let src = '';
+    try {
+      const uploaded = await uploadImageToStorage(renamedFile, {
+        slug: slugify(form.slug || form.title || 'articulo'),
+        kind: 'inline',
+      });
+      src = uploaded.publicUrl;
+    } catch (error) {
+      toast({
+        title: 'No se pudo subir la imagen',
+        description: error.message || 'Intenta nuevamente con otra imagen.',
+        variant: 'destructive',
+      });
+      return false;
+    }
     const display = displayMode === 'caption' ? 'center' : displayMode;
     const imageAttrs = {
       src,
@@ -911,6 +1097,38 @@ const ArticleManagementModule = () => {
     });
     if (!inserted) return;
     clearInternalImageDraft();
+  };
+
+  const insertSuggestedInternalLink = (suggestion) => {
+    if (!editor || !suggestion?.href) return;
+    const attrs = { href: suggestion.href, target: null, rel: null };
+    const hasSelection = editor.state.selection.from !== editor.state.selection.to;
+    if (hasSelection) {
+      editor.chain().focus().extendMarkRange('link').setLink(attrs).run();
+    } else {
+      const anchorText = suggestion.title || suggestion.slug;
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<a href="${escapeHtml(attrs.href)}">${escapeHtml(anchorText)}</a>`)
+        .run();
+    }
+    setLinkDraft({ url: attrs.href, newTab: false });
+    toast({ title: 'Enlace interno insertado' });
+  };
+
+  const copyInternalLink = async (suggestion) => {
+    if (!suggestion?.href) return;
+    const absoluteUrl =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}${suggestion.href}`
+        : suggestion.href;
+    try {
+      await navigator.clipboard.writeText(absoluteUrl);
+      toast({ title: 'Enlace copiado' });
+    } catch {
+      window.prompt('Copia este enlace', absoluteUrl);
+    }
   };
 
   return (
@@ -1073,6 +1291,52 @@ const ArticleManagementModule = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Añadir enlace
                 </Button>
+              </div>
+
+              <div className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-100">Sugerencias de enlaces internos</p>
+                  <p className="text-xs text-slate-400">Basado en título, categoría y keywords</p>
+                </div>
+                {internalLinkSuggestions.length ? (
+                  <div className="space-y-2">
+                    {internalLinkSuggestions.map((suggestion) => (
+                      <div
+                        key={`${suggestion.slug}-${suggestion.id}`}
+                        className="rounded-lg border border-slate-700 bg-slate-900/60 p-2"
+                      >
+                        <p className="text-sm font-medium text-slate-100 line-clamp-2">
+                          {suggestion.title}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          {suggestion.href} · relevancia {suggestion.relevance}
+                        </p>
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => insertSuggestedInternalLink(suggestion)}
+                          >
+                            <Link2 className="w-4 h-4 mr-1" />
+                            Insertar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyInternalLink(suggestion)}
+                          >
+                            <Copy className="w-4 h-4 mr-1" />
+                            Copiar URL
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400">
+                    Aún no hay coincidencias claras. Completa título, keywords o categoría para mejorar sugerencias.
+                  </p>
+                )}
               </div>
 
               <div className="sticky top-2 z-20 rounded-xl border border-slate-700 bg-slate-950/95 backdrop-blur">
