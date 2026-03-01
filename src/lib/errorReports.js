@@ -20,7 +20,11 @@ const getLocalReports = () => {
 
 const saveLocalReports = (items) => {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCAL_ERROR_REPORTS_KEY, JSON.stringify(items));
+  try {
+    window.localStorage.setItem(LOCAL_ERROR_REPORTS_KEY, JSON.stringify(items));
+  } catch {
+    // Ignore localStorage quota issues; report creation should not crash UI.
+  }
 };
 
 export const readLocalErrorReports = () => getLocalReports();
@@ -148,4 +152,3 @@ export const createErrorReportTicket = async ({
     storageWarning,
   };
 };
-

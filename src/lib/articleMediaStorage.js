@@ -36,13 +36,23 @@ export const uploadImageToStorage = async (file, options = {}) => {
   const fileName = `${stamp}-${rand}.${ext}`;
   const storagePath = `articles/${slug}/${kind}/${fileName}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from(ARTICLE_IMAGE_BUCKET)
-    .upload(storagePath, file, {
-      upsert: false,
-      contentType: file.type || `image/${ext}`,
-      cacheControl: '31536000',
-    });
+  let uploadError = null;
+  try {
+    const { error } = await supabase.storage
+      .from(ARTICLE_IMAGE_BUCKET)
+      .upload(storagePath, file, {
+        upsert: false,
+        contentType: file.type || `image/${ext}`,
+        cacheControl: '31536000',
+      });
+    uploadError = error;
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('failed to fetch') || message.includes('name_not_resolved')) {
+      throw new Error('No se pudo conectar con Supabase Storage (DNS/red). Revisa conexión o dominio.');
+    }
+    throw error;
+  }
   if (uploadError) {
     throw new Error(uploadError.message || 'No se pudo subir imagen a Storage.');
   }

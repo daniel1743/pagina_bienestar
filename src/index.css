@@ -458,8 +458,35 @@
 
 .dark .article-content,
 .dark .editorial-content {
-  background: #ffffff;
-  color: #111111;
+  background: transparent;
+  color: #e5e7eb;
+}
+
+.dark .article-content h1,
+.dark .article-content h2,
+.dark .article-content h3,
+.dark .editorial-content h1,
+.dark .editorial-content h2,
+.dark .editorial-content h3 {
+  color: #f8fafc;
+}
+
+.dark .article-content p,
+.dark .editorial-content p,
+.dark .article-content li,
+.dark .editorial-content li,
+.dark .article-content strong,
+.dark .editorial-content strong,
+.dark .article-content b,
+.dark .editorial-content b,
+.dark .article-content blockquote,
+.dark .editorial-content blockquote {
+  color: #e5e7eb;
+}
+
+.dark .article-content a,
+.dark .editorial-content a {
+  color: #93c5fd;
 }
 
 /* ================================

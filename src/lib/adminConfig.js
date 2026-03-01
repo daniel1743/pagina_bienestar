@@ -46,8 +46,16 @@ const safeRead = (key, fallback) => {
 };
 
 const safeWrite = (key, value) => {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(key, JSON.stringify(value));
+  if (typeof window === 'undefined') return false;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    if (typeof console !== 'undefined') {
+      console.warn('[adminConfig] localStorage write skipped', { key, error: error?.message });
+    }
+    return false;
+  }
 };
 
 const mergeWithObjectDefaults = (value, defaults) => {

@@ -97,7 +97,36 @@ const inferAuthorSignature = (authorName) => {
 };
 const normalizeStatus = (value) => (['published', 'publicado'].includes((value || '').toLowerCase()) ? 'published' : ['scheduled', 'programado'].includes((value || '').toLowerCase()) ? 'scheduled' : ['review', 'en_revision', 'revision'].includes((value || '').toLowerCase()) ? 'review' : 'draft');
 const safeRead = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) ?? fallback : fallback; } catch { return fallback; } };
-const safeWrite = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+const safeWrite = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+};
+const pruneAutosaveKeys = (keepKey = '') => {
+  try {
+    const keys = Object.keys(localStorage).filter(
+      (key) => key.startsWith('admin_article_autosave_') && key !== keepKey,
+    );
+    if (!keys.length) return 0;
+    keys.forEach((key) => localStorage.removeItem(key));
+    return keys.length;
+  } catch {
+    return 0;
+  }
+};
+const compactAutosavePayload = (value) => ({
+  ...value,
+  content: String(value?.content || '').slice(0, 90000),
+});
+const writeAutosaveSnapshot = (key, value) => {
+  const snapshot = compactAutosavePayload(value);
+  if (safeWrite(key, snapshot)) return true;
+  pruneAutosaveKeys(key);
+  return safeWrite(key, snapshot);
+};
 const toDataUrl = (file) => new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result || '')); r.onerror = () => reject(new Error('No se pudo leer la imagen.')); r.readAsDataURL(file); });
 const fileToBase64 = async (file) => {
   const dataUrl = await toDataUrl(file);
@@ -192,6 +221,22 @@ const stripSeoMetaFields = (value) => {
   delete next.focusKeyword;
   delete next.secondaryKeywords;
   return next;
+};
+const stripLargeLocalMetaFields = (value) => {
+  const next = { ...stripSeoMetaFields(value) };
+  delete next.content;
+  return next;
+};
+const sanitizeMediaLibraryItems = (items) =>
+  (Array.isArray(items) ? items : [])
+    .filter((item) => item?.url && !isDataImageUrl(item.url))
+    .slice(0, 120);
+const compactArticleMetaStore = (store) => {
+  const entries = Object.entries(store || {});
+  return entries.reduce((acc, [key, value]) => {
+    acc[key] = stripLargeLocalMetaFields(value);
+    return acc;
+  }, {});
 };
 const articleInternalUrl = (slug) => `/articulos/${slug}`;
 const canvasToWebpBlob = (canvas, quality) =>
@@ -305,7 +350,7 @@ const ArticleManagementModule = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showPreview, setShowPreview] = useState(false);
-  const [mediaLibrary, setMediaLibrary] = useState(getMediaLibrary());
+  const [mediaLibrary, setMediaLibrary] = useState(() => sanitizeMediaLibraryItems(getMediaLibrary()));
   const [autosaveInfo, setAutosaveInfo] = useState('Sin cambios');
   const [linkDraft, setLinkDraft] = useState({ url: '', newTab: false });
   const [internalFile, setInternalFile] = useState(null);
@@ -396,7 +441,27 @@ const ArticleManagementModule = () => {
     if (editor.getHTML() !== normalized) editor.commands.setContent(normalized, false);
   }, [editor, form.id, form.content]);
   useEffect(() => { if (!form.slug && form.title) setForm((p) => ({ ...p, slug: slugify(p.title) })); }, [form.title, form.slug]);
-  useEffect(() => { if (!form.title && !form.content) return; setAutosaveInfo('Autosave en progreso...'); const t = setTimeout(() => { safeWrite(`admin_article_autosave_${form.id || form.slug || 'new'}`, { ...form, autosavedAt: new Date().toISOString() }); setAutosaveInfo(`Autosave ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`); }, 6000); return () => clearTimeout(t); }, [form]);
+  useEffect(() => {
+    const compactMetaStore = compactArticleMetaStore(getArticleMetaStore());
+    saveArticleMetaStore(compactMetaStore);
+    const compactMedia = sanitizeMediaLibraryItems(getMediaLibrary());
+    saveMediaLibrary(compactMedia);
+    setMediaLibrary(compactMedia);
+  }, []);
+  useEffect(() => {
+    if (!form.title && !form.content) return;
+    setAutosaveInfo('Autosave en progreso...');
+    const key = `admin_article_autosave_${form.id || form.slug || 'new'}`;
+    const t = setTimeout(() => {
+      const saved = writeAutosaveSnapshot(key, { ...form, autosavedAt: new Date().toISOString() });
+      if (!saved) {
+        setAutosaveInfo('Autosave pausado (almacenamiento local lleno)');
+        return;
+      }
+      setAutosaveInfo(`Autosave ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [form]);
   useEffect(() => () => {
     if (internalPreview && internalPreview.startsWith('blob:')) URL.revokeObjectURL(internalPreview);
   }, [internalPreview]);
@@ -578,7 +643,7 @@ const ArticleManagementModule = () => {
   };
 
   const persistMeta = (id, payload) => {
-    const sanitizedPayload = stripSeoMetaFields(payload);
+    const sanitizedPayload = stripLargeLocalMetaFields(payload);
     const store = getArticleMetaStore();
     const normalizedSlug = slugify(sanitizedPayload?.slug || '');
     const resolvedId = id || sanitizedPayload?.id || null;
@@ -648,13 +713,40 @@ const ArticleManagementModule = () => {
     let id = workingForm.id; let savedRemotely = false;
     const shouldUpdate = Boolean(workingForm.id) && !String(workingForm.id).startsWith('local-');
     if (shouldUpdate) {
-      let { error } = await supabase.from('articles').update(payload).eq('id', workingForm.id);
-      if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ error } = await supabase.from('articles').update(without).eq('id', workingForm.id)); }
-      if (error) toast({ title: 'Guardado remoto falló', description: error.message, variant: 'destructive' }); else savedRemotely = true;
+      try {
+        let { error } = await supabase.from('articles').update(payload).eq('id', workingForm.id);
+        if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ error } = await supabase.from('articles').update(without).eq('id', workingForm.id)); }
+        if (error) {
+          toast({ title: 'Guardado remoto falló', description: error.message, variant: 'destructive' });
+        } else {
+          savedRemotely = true;
+        }
+      } catch (error) {
+        toast({
+          title: 'Sin conexión con Supabase',
+          description: error?.message || 'No se pudo actualizar el artículo en servidor.',
+          variant: 'destructive',
+        });
+      }
     } else {
-      let { data, error } = await supabase.from('articles').insert([payload]).select('id').single();
-      if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ data, error } = await supabase.from('articles').insert([without]).select('id').single()); }
-      if (error) { id = `local-${Date.now()}`; toast({ title: 'Guardado local', description: 'No se pudo guardar en Supabase.', variant: 'destructive' }); } else { id = data.id; savedRemotely = true; }
+      try {
+        let { data, error } = await supabase.from('articles').insert([payload]).select('id').single();
+        if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ data, error } = await supabase.from('articles').insert([without]).select('id').single()); }
+        if (error) {
+          id = `local-${Date.now()}`;
+          toast({ title: 'Guardado local', description: error.message || 'No se pudo guardar en Supabase.', variant: 'destructive' });
+        } else {
+          id = data.id;
+          savedRemotely = true;
+        }
+      } catch (error) {
+        id = `local-${Date.now()}`;
+        toast({
+          title: 'Guardado local',
+          description: 'Sin conexión con Supabase. Se guardó solo en este navegador.',
+          variant: 'destructive',
+        });
+      }
     }
     const next = {
       ...workingForm,

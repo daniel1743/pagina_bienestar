@@ -24,7 +24,11 @@ const migrateTokenStorage = (remember) => {
 
 const setRememberSession = (remember) => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(REMEMBER_SESSION_KEY, remember ? '1' : '0');
+    try {
+        window.localStorage.setItem(REMEMBER_SESSION_KEY, remember ? '1' : '0');
+    } catch {
+        // Ignore local storage quota errors; auth storage fallback still works.
+    }
     migrateTokenStorage(remember);
 };
 
@@ -39,12 +43,20 @@ const dynamicAuthStorage = {
     setItem: (key, value) => {
         if (typeof window === 'undefined') return;
         const remember = getRememberSession();
-        if (remember) {
-            window.localStorage.setItem(key, value);
-            window.sessionStorage.removeItem(key);
-        } else {
+        try {
+            if (remember) {
+                window.localStorage.setItem(key, value);
+                window.sessionStorage.removeItem(key);
+                return;
+            }
             window.sessionStorage.setItem(key, value);
             window.localStorage.removeItem(key);
+        } catch {
+            try {
+                window.sessionStorage.setItem(key, value);
+            } catch {
+                // Ignore hard storage failures to avoid app crash loops.
+            }
         }
     },
     removeItem: (key) => {
