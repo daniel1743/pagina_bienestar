@@ -1,13 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl =
-    import.meta.env.VITE_SUPABASE_URL ||
-    import.meta.env.SUPABASE_URL ||
-    'https://kuacuriiueaxjzzgmqtu.supabase.co';
-const supabaseAnonKey =
-    import.meta.env.VITE_SUPABASE_ANON_KEY ||
-    import.meta.env.SUPABASE_ANON_KEY ||
+const DEFAULT_SUPABASE_URL = 'https://kuacuriiueaxjzzgmqtu.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YWN1cmlpdWVheGp6emdtcXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg0ODUsImV4cCI6MjA4NzE4NDQ4NX0.fkJIFamjrZOPJ5wHmz204MMlJMnEMKGd87XyCoQcaMI';
+
+const cleanEnvValue = (value) => String(value || '').trim();
+const isValidSupabaseUrl = (value) =>
+    /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(value) && !value.includes('tu-proyecto.supabase.co');
+const isValidAnonKey = (value) =>
+    value.length > 40 && !value.includes('tu_supabase_anon_key') && !value.includes('xxxxxxxx');
+
+const envUrl = cleanEnvValue(import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL);
+const envAnon = cleanEnvValue(import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY);
+
+const supabaseUrl = isValidSupabaseUrl(envUrl) ? envUrl : DEFAULT_SUPABASE_URL;
+const supabaseAnonKey = isValidAnonKey(envAnon) ? envAnon : DEFAULT_SUPABASE_ANON_KEY;
 const AUTH_STORAGE_KEY = 'sb-kuacuriiueaxjzzgmqtu-auth-token';
 const REMEMBER_SESSION_KEY = 'remember_session';
 

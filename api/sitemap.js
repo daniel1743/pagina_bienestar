@@ -1,15 +1,27 @@
 import { LOCAL_PUBLISHED_ARTICLES } from '../src/content/localPublishedArticles.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://bienestarenclaro.com').replace(/\/$/, '');
-const SUPABASE_URL =
-  process.env.SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL ||
-  'https://kuacuriiueaxjzzgmqtu.supabase.co';
-const SUPABASE_SERVER_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.VITE_SUPABASE_ANON_KEY ||
+const DEFAULT_SUPABASE_URL = 'https://kuacuriiueaxjzzgmqtu.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YWN1cmlpdWVheGp6emdtcXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg0ODUsImV4cCI6MjA4NzE4NDQ4NX0.fkJIFamjrZOPJ5wHmz204MMlJMnEMKGd87XyCoQcaMI';
+
+const cleanEnvValue = (value) => String(value || '').trim();
+const isValidSupabaseProjectUrl = (value) =>
+  /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(value) && !value.includes('tu-proyecto.supabase.co');
+
+const envSupabaseUrl = cleanEnvValue(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
+const SUPABASE_URL = isValidSupabaseProjectUrl(envSupabaseUrl) ? envSupabaseUrl : DEFAULT_SUPABASE_URL;
+
+const KEY_CANDIDATES = Array.from(
+  new Set(
+    [
+      cleanEnvValue(process.env.SUPABASE_SERVICE_ROLE_KEY),
+      cleanEnvValue(process.env.SUPABASE_ANON_KEY),
+      cleanEnvValue(process.env.VITE_SUPABASE_ANON_KEY),
+      DEFAULT_SUPABASE_ANON_KEY,
+    ].filter(Boolean),
+  ),
+);
 
 const STATIC_PATHS = [
   '/',
@@ -59,20 +71,25 @@ const buildArticlesRestUrl = ({ statuses = [], onlyIndexable = true }) => {
 };
 
 const fetchArticlesViaRest = async (url) => {
-  const headers = {
-    apikey: SUPABASE_SERVER_KEY,
-    Authorization: `Bearer ${SUPABASE_SERVER_KEY}`,
-  };
-  const response = await fetch(url, { headers });
-  const body = await response.text();
-  if (!response.ok) {
-    throw new Error(`[${response.status}] ${body.slice(0, 400)}`);
+  let lastError = null;
+  for (const key of KEY_CANDIDATES) {
+    const headers = {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+    };
+    const response = await fetch(url, { headers });
+    const body = await response.text();
+    if (!response.ok) {
+      lastError = new Error(`[${response.status}] ${body.slice(0, 400)}`);
+      continue;
+    }
+    try {
+      return JSON.parse(body);
+    } catch {
+      lastError = new Error(`Invalid JSON from Supabase REST: ${body.slice(0, 200)}`);
+    }
   }
-  try {
-    return JSON.parse(body);
-  } catch {
-    throw new Error(`Invalid JSON from Supabase REST: ${body.slice(0, 200)}`);
-  }
+  throw lastError || new Error('No Supabase key candidates available for sitemap query');
 };
 
 const buildSitemapXml = (urls) => {
@@ -95,7 +112,7 @@ ${nodes}
 };
 
 const fetchPublishedArticles = async () => {
-  if (!SUPABASE_URL || !SUPABASE_SERVER_KEY) return [];
+  if (!SUPABASE_URL || KEY_CANDIDATES.length === 0) return [];
 
   let rows = [];
   try {

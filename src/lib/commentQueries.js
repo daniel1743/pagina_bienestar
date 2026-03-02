@@ -1,50 +1,24 @@
 import { supabase } from '@/lib/customSupabaseClient';
 
-const isMissingCommentsUsersRelation = (error) => {
-  const message = String(error?.message || '').toLowerCase();
-  return (
-    error?.code === 'PGRST200' &&
-    message.includes("relationship between 'comments' and 'users'")
-  );
-};
-
 export const fetchCommentsWithProfiles = async ({
   articleId = null,
   onlyApproved = false,
   ascending = false,
   limit = 500,
 }) => {
-  let query = supabase
-    .from('comments')
-    .select('*, articles(title, slug), users(user_profiles(name, photo_url))');
-
-  if (articleId) query = query.eq('article_id', articleId);
-  if (onlyApproved) query = query.eq('status', 'approved');
-
-  query = query.order('created_at', { ascending }).limit(limit);
-
-  const direct = await query;
-  if (!direct.error) {
-    return { data: direct.data || [], error: null, usedFallback: false };
-  }
-
-  if (!isMissingCommentsUsersRelation(direct.error)) {
-    return { data: [], error: direct.error, usedFallback: false };
-  }
-
-  let fallbackQuery = supabase
+  let baseQuery = supabase
     .from('comments')
     .select('*, articles(title, slug)');
-  if (articleId) fallbackQuery = fallbackQuery.eq('article_id', articleId);
-  if (onlyApproved) fallbackQuery = fallbackQuery.eq('status', 'approved');
-  fallbackQuery = fallbackQuery.order('created_at', { ascending }).limit(limit);
+  if (articleId) baseQuery = baseQuery.eq('article_id', articleId);
+  if (onlyApproved) baseQuery = baseQuery.eq('status', 'approved');
+  baseQuery = baseQuery.order('created_at', { ascending }).limit(limit);
 
-  const fallback = await fallbackQuery;
-  if (fallback.error) {
-    return { data: [], error: fallback.error, usedFallback: true };
+  const base = await baseQuery;
+  if (base.error) {
+    return { data: [], error: base.error, usedFallback: true };
   }
 
-  const comments = fallback.data || [];
+  const comments = base.data || [];
   const userIds = [...new Set(comments.map((c) => c.user_id).filter(Boolean))];
   let profilesByUserId = {};
 
@@ -64,5 +38,5 @@ export const fetchCommentsWithProfiles = async ({
     user_profile: profilesByUserId[comment.user_id] || null,
   }));
 
-  return { data: enriched, error: null, usedFallback: true };
+  return { data: enriched, error: null, usedFallback: false };
 };

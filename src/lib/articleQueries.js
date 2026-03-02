@@ -6,7 +6,6 @@ const STRATEGY_STORAGE_KEY = 'bec_articles_query_strategy_v1';
 let cachedStrategyKey = null;
 
 const QUERY_STRATEGIES = [
-  { key: 'published_updated_at', filter: 'published_flag', orderBy: 'updated_at' },
   { key: 'status_updated_at', filter: 'status', orderBy: 'updated_at' },
   { key: 'status_published_at', filter: 'status', orderBy: 'published_at' },
   { key: 'status_created_at', filter: 'status', orderBy: 'created_at' },
