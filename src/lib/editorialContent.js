@@ -1,3 +1,5 @@
+import { normalizeSupabaseStorageObjectUrl } from '@/lib/articleImage';
+
 // TODO: sustituir por DOMPurify cuando el entorno permita instalar dependencias.
 const ALLOWED_TAGS = new Set([
   'p',
@@ -179,7 +181,7 @@ const sanitizeAttributes = (element) => {
       element.remove();
       return;
     }
-    element.setAttribute('src', src);
+    element.setAttribute('src', normalizeSupabaseStorageObjectUrl(src));
     element.setAttribute('loading', 'lazy');
     element.setAttribute('decoding', 'async');
     element.removeAttribute('title');

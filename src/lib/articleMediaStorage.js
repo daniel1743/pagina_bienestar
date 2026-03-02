@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/customSupabaseClient';
+import { normalizeSupabaseStorageObjectUrl } from '@/lib/articleImage';
 
 export const ARTICLE_IMAGE_BUCKET = 'article-images';
 
@@ -65,5 +66,9 @@ export const uploadImageToStorage = async (file, options = {}) => {
     throw new Error('No se pudo resolver la URL pública de la imagen.');
   }
 
-  return { publicUrl, storagePath, bucket: ARTICLE_IMAGE_BUCKET };
+  return {
+    publicUrl: normalizeSupabaseStorageObjectUrl(publicUrl),
+    storagePath,
+    bucket: ARTICLE_IMAGE_BUCKET,
+  };
 };

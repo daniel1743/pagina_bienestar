@@ -6,6 +6,14 @@ const isMissingTableError = (error, tableName) => {
   const message = String(error?.message || '').toLowerCase();
   return message.includes(`relation "${String(tableName || '').toLowerCase()}" does not exist`);
 };
+const isSchemaColumnMismatchError = (error, tableName) => {
+  const message = String(error?.message || '').toLowerCase();
+  const target = String(tableName || '').toLowerCase();
+  return (
+    message.includes(`column`) &&
+    (message.includes(target) || message.includes(`'${target}'`) || message.includes(`"${target}"`))
+  );
+};
 
 const getLocalReports = () => {
   if (typeof window === 'undefined') return [];
@@ -92,9 +100,32 @@ export const createErrorReportTicket = async ({
   let storedRemote = false;
   let storageWarning = '';
 
-  const insertResponse = await supabase.from('error_reports').insert(payload).select('*').single();
+  let insertResponse = await supabase.from('error_reports').insert(payload).select('*').single();
+  if (insertResponse.error && isSchemaColumnMismatchError(insertResponse.error, 'error_reports')) {
+    // Fallback compatible con tabla mínima: id, message, stack, created_at.
+    insertResponse = await supabase
+      .from('error_reports')
+      .insert({
+        message: `[${ticketCode}] ${payload.title}`.slice(0, 2000),
+        stack: payload.detail,
+        created_at: now,
+      })
+      .select('*')
+      .single();
+  }
   if (!insertResponse.error && insertResponse.data) {
-    remoteRecord = insertResponse.data;
+    remoteRecord = {
+      ...insertResponse.data,
+      ticket_code: insertResponse.data.ticket_code || ticketCode,
+      title: insertResponse.data.title || payload.title,
+      detail: insertResponse.data.detail || payload.detail,
+      reporter_name: insertResponse.data.reporter_name || payload.reporter_name,
+      reporter_email: insertResponse.data.reporter_email || payload.reporter_email,
+      source_path: insertResponse.data.source_path || payload.source_path,
+      status: insertResponse.data.status || 'nuevo',
+      email_status: insertResponse.data.email_status || 'pendiente',
+      created_at: insertResponse.data.created_at || now,
+    };
     storedRemote = true;
   } else {
     const localId = `local-${Date.now()}`;
