@@ -183,6 +183,10 @@ const normalizeImageText = (value, maxLength = 140) =>
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, maxLength);
+const replaceH1WithH2 = (value) =>
+  String(value || '')
+    .replace(/<h1(\s[^>]*)?>/gi, '<h2$1>')
+    .replace(/<\/h1>/gi, '</h2>');
 const INTERNAL_LINK_STOPWORDS = new Set([
   'a', 'al', 'algo', 'como', 'con', 'de', 'del', 'desde', 'donde', 'el', 'ella', 'ellas', 'ellos',
   'en', 'entre', 'es', 'esta', 'este', 'esto', 'ha', 'hacia', 'hay', 'la', 'las', 'lo', 'los',
@@ -373,7 +377,11 @@ const ArticleManagementModule = () => {
       Table.configure({ resizable: true }), TableRow, TableCell, TableHeader,
     ],
     content: sanitizeEditorialHtml(form.content),
-    onUpdate: ({ editor: ed }) => setForm((p) => ({ ...p, content: ed.getHTML() })),
+    editorProps: {
+      transformPastedHTML: (html) => sanitizeEditorialHtml(replaceH1WithH2(html || '')),
+    },
+    onUpdate: ({ editor: ed }) =>
+      setForm((p) => ({ ...p, content: sanitizeEditorialHtml(replaceH1WithH2(ed.getHTML())) })),
     onCreate: ({ editor: ed }) => {
       lastSelectionRef.current = ed.state.selection.from;
     },
@@ -666,11 +674,20 @@ const ArticleManagementModule = () => {
     if (workingForm.metaTitle.length > 60 || workingForm.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
     const slug = slugify(workingForm.slug);
     const raw = editor?.getHTML() || workingForm.content;
-    const content = sanitizeEditorialHtml(raw);
+    const normalizedRaw = replaceH1WithH2(raw);
+    const content = sanitizeEditorialHtml(normalizedRaw);
     const resolvedSignature = AUTHOR_SIGNATURES[workingForm.authorSignature] ? workingForm.authorSignature : inferAuthorSignature(workingForm.authorName);
     const resolvedAuthorName =
       AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
     if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
+    if (/<h1[\s>]/i.test(content)) {
+      toast({
+        title: 'No se pudo normalizar H1',
+        description: 'El contenido aún contiene H1. Revisa el editor y vuelve a guardar.',
+        variant: 'destructive',
+      });
+      return null;
+    }
     const safeFeaturedImage = resolveArticleImageUrl(workingForm.featuredImage || '');
     const canonicalUrl = normalizeCanonicalUrl(workingForm.canonical);
     if (workingForm.featuredImage && !safeFeaturedImage) {

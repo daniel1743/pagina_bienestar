@@ -35,6 +35,15 @@ const buildCanonicalUrl = (canonicalUrl, slug) => {
   if (raw.startsWith('/')) return `${SITE_URL}${raw}`;
   return `${SITE_URL}/articulos/${slug}`;
 };
+const upsertHeadMeta = (selector, createTag, updater) => {
+  if (typeof document === 'undefined') return;
+  let element = document.head.querySelector(selector);
+  if (!element) {
+    element = document.createElement(createTag);
+    document.head.appendChild(element);
+  }
+  updater(element);
+};
 
 const ArticleDetailPage = () => {
   const { slug } = useParams();
@@ -77,6 +86,23 @@ const ArticleDetailPage = () => {
     () => (article?.no_index ? 'noindex, nofollow' : 'index, follow'),
     [article?.no_index],
   );
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.title = seoTitle;
+    upsertHeadMeta('meta[name="description"]', 'meta', (element) => {
+      element.setAttribute('name', 'description');
+      element.setAttribute('content', seoDescription);
+    });
+    upsertHeadMeta('meta[name="robots"]', 'meta', (element) => {
+      element.setAttribute('name', 'robots');
+      element.setAttribute('content', robotsContent);
+    });
+    upsertHeadMeta('link[rel="canonical"]', 'link', (element) => {
+      element.setAttribute('rel', 'canonical');
+      element.setAttribute('href', canonicalUrl);
+    });
+  }, [seoTitle, seoDescription, robotsContent, canonicalUrl]);
 
   useEffect(() => {
     const fetchArticle = async () => {

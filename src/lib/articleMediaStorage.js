@@ -55,6 +55,16 @@ export const uploadImageToStorage = async (file, options = {}) => {
     throw error;
   }
   if (uploadError) {
+    const message = String(uploadError.message || '').toLowerCase();
+    if (
+      message.includes('row-level security') ||
+      message.includes('violates row-level security policy') ||
+      String(uploadError.statusCode || '') === '403'
+    ) {
+      throw new Error(
+        'No autorizado para subir a Storage. Inicia sesión o ajusta policies del bucket article-images.',
+      );
+    }
     throw new Error(uploadError.message || 'No se pudo subir imagen a Storage.');
   }
 

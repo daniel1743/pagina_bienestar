@@ -25,11 +25,16 @@ const loadDotEnv = () => {
 
 loadDotEnv();
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://kuacuriiueaxjzzgmqtu.supabase.co';
-const SUPABASE_ANON_KEY =
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  'https://kuacuriiueaxjzzgmqtu.supabase.co';
+const SUPABASE_SERVER_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YWN1cmlpdWVheGp6emdtcXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg0ODUsImV4cCI6MjA4NzE4NDQ4NX0.fkJIFamjrZOPJ5wHmz204MMlJMnEMKGd87XyCoQcaMI';
-const SITE_URL = (process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://chactivo.com').replace(/\/$/, '');
+const SITE_URL = (process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://bienestarenclaro.com').replace(/\/$/, '');
 
 const staticPaths = [
   '/',
@@ -78,7 +83,7 @@ ${nodes}
 };
 
 const fetchPublishedArticles = async () => {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVER_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
@@ -86,36 +91,36 @@ const fetchPublishedArticles = async () => {
   try {
     const { data, error } = await supabase
       .from('articles')
-      .select('slug,created_at,published_at,status')
+      .select('slug,created_at,updated_at,published_at,status,no_index')
+      .eq('status', 'published')
+      .eq('no_index', false)
+      .not('slug', 'is', null)
       .limit(5000);
     if (error) throw error;
     rows = data || [];
-    rows = rows.filter((item) => {
-      const status = String(item?.status || '').toLowerCase();
-      return ['published', 'publicado', 'active'].includes(status);
-    });
   } catch {
     const { data, error } = await supabase
       .from('articles')
-      .select('slug,created_at,published_at')
-      .not('published_at', 'is', null)
+      .select('slug,created_at,updated_at,published_at,status,no_index')
+      .in('status', ['published', 'publicado', 'active'])
+      .neq('no_index', true)
+      .not('slug', 'is', null)
       .limit(5000);
     if (error) throw error;
     rows = data || [];
-    rows = rows.filter((item) => item?.published_at);
   }
 
   if (!Array.isArray(rows)) return [];
   return rows
     .filter((item) => item?.slug)
     .sort((a, b) => {
-      const aDate = new Date(a.created_at || a.published_at || 0).getTime();
-      const bDate = new Date(b.created_at || b.published_at || 0).getTime();
+      const aDate = new Date(a.updated_at || a.published_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.published_at || b.created_at || 0).getTime();
       return bDate - aDate;
     })
     .map((item) => ({
       loc: `${SITE_URL}/articulos/${item.slug}`,
-      lastmod: item.created_at || item.published_at || new Date().toISOString(),
+      lastmod: item.updated_at || item.published_at || item.created_at || new Date().toISOString(),
       changefreq: 'weekly',
       priority: '0.8',
     }));
