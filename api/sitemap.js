@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import { LOCAL_PUBLISHED_ARTICLES } from '../src/content/localPublishedArticles.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://bienestarenclaro.com').replace(/\/$/, '');
@@ -41,6 +40,41 @@ const toIsoDate = (value) => {
 };
 const contentDate = (value) => new Date(value?.updated_at || value?.published_at || value?.created_at || 0).getTime();
 
+const buildArticlesRestUrl = ({ statuses = [], onlyIndexable = true }) => {
+  const url = new URL('/rest/v1/articles', SUPABASE_URL);
+  url.searchParams.set('select', 'slug,created_at,updated_at,published_at,status,no_index');
+  url.searchParams.set('slug', 'not.is.null');
+  url.searchParams.set('limit', '5000');
+  if (statuses.length === 1) {
+    url.searchParams.set('status', `eq.${statuses[0]}`);
+  } else if (statuses.length > 1) {
+    url.searchParams.set('status', `in.(${statuses.join(',')})`);
+  }
+  if (onlyIndexable) {
+    url.searchParams.set('no_index', 'eq.false');
+  } else {
+    url.searchParams.set('no_index', 'neq.true');
+  }
+  return url.toString();
+};
+
+const fetchArticlesViaRest = async (url) => {
+  const headers = {
+    apikey: SUPABASE_SERVER_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVER_KEY}`,
+  };
+  const response = await fetch(url, { headers });
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`[${response.status}] ${body.slice(0, 400)}`);
+  }
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error(`Invalid JSON from Supabase REST: ${body.slice(0, 200)}`);
+  }
+};
+
 const buildSitemapXml = (urls) => {
   const nodes = urls
     .map(
@@ -63,35 +97,28 @@ ${nodes}
 const fetchPublishedArticles = async () => {
   if (!SUPABASE_URL || !SUPABASE_SERVER_KEY) return [];
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVER_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
   let rows = [];
   try {
-    const { data, error } = await supabase
-      .from('articles')
-      .select('slug,created_at,updated_at,published_at,status,no_index')
-      .eq('status', PRIMARY_PUBLISHED_STATUS)
-      .eq('no_index', false)
-      .not('slug', 'is', null)
-      .limit(5000);
-    if (error) throw error;
-    rows = data || [];
+    rows = await fetchArticlesViaRest(
+      buildArticlesRestUrl({
+        statuses: [PRIMARY_PUBLISHED_STATUS],
+        onlyIndexable: true,
+      }),
+    );
   } catch (error) {
     console.error('[sitemap] primary query failed', {
       message: error?.message || String(error),
       code: error?.code || '',
       hint: error?.hint || '',
     });
-    const { data, error: fallbackError } = await supabase
-      .from('articles')
-      .select('slug,created_at,updated_at,published_at,no_index')
-      .in('status', LEGACY_PUBLISHED_STATUS_VALUES)
-      .neq('no_index', true)
-      .not('slug', 'is', null)
-      .limit(5000);
-    if (fallbackError) {
+    try {
+      rows = await fetchArticlesViaRest(
+        buildArticlesRestUrl({
+          statuses: LEGACY_PUBLISHED_STATUS_VALUES,
+          onlyIndexable: false,
+        }),
+      );
+    } catch (fallbackError) {
       console.error('[sitemap] fallback query failed', {
         message: fallbackError?.message || String(fallbackError),
         code: fallbackError?.code || '',
@@ -99,7 +126,6 @@ const fetchPublishedArticles = async () => {
       });
       throw fallbackError;
     }
-    rows = data || [];
   }
 
   return rows
