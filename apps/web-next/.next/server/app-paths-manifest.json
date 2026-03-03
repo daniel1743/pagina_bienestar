@@ -3,6 +3,6 @@
   "/page": "app/page.js",
   "/articulos/page": "app/articulos/page.js",
   "/sitemap.xml/route": "app/sitemap.xml/route.js",
-  "/robots.txt/route": "app/robots.txt/route.js",
-  "/articulos/[slug]/page": "app/articulos/[slug]/page.js"
+  "/articulos/[slug]/page": "app/articulos/[slug]/page.js",
+  "/robots.txt/route": "app/robots.txt/route.js"
 }
