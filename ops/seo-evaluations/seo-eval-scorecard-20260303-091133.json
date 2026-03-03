@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-03-03T12:11:33.468Z",
+  "site_url": "https://bienestarenclaro.com",
+  "baseline_file": "seo-eval-baseline-20260303-084933.json",
+  "link_file": "seo-link-cluster-20260303-091109.json",
+  "baseline_generated_at": "2026-03-03T11:49:33.112Z",
+  "dimensions": {
+    "server_first_seo": {
+      "weight": 35,
+      "score": 0,
+      "state": "FAIL"
+    },
+    "crawl_budget_sitemap": {
+      "weight": 25,
+      "score": 100,
+      "state": "PASS"
+    },
+    "linking_clusters": {
+      "weight": 20,
+      "score": 35,
+      "state": "FAIL"
+    },
+    "operability_monitoring": {
+      "weight": 20,
+      "score": 85,
+      "state": "PASS"
+    }
+  },
+  "weighted_score": 49,
+  "global_state": "FAIL",
+  "recommendation": "Migrar a server-first para articulos y cerrar brechas de cluster/enlazado",
+  "hard_rules": {
+    "server_first_95": false,
+    "sitemap_ok": true,
+    "all_dimensions_pass": false
+  }
+}
