@@ -1,0 +1,187 @@
+{
+  "generated_at": "2026-03-03T15:12:37.908Z",
+  "mode": "apply",
+  "source_report": "seo-link-cluster-20260303-121152.json",
+  "config": {
+    "max_links_per_article": 3,
+    "min_relevance": 35,
+    "include_strong": true,
+    "limit": 11,
+    "skip_slugs": [
+      "para-probar-sanitizacion"
+    ]
+  },
+  "summary": {
+    "candidates": 10,
+    "found_in_db": 6,
+    "change_candidates": 4,
+    "updated": 4,
+    "unchanged": 0,
+    "links_added": 11,
+    "missing_in_db": 4,
+    "skipped_base64": 2,
+    "errors": 0
+  },
+  "items": [
+    {
+      "slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+      "mode": "apply",
+      "changed": true,
+      "links_added": 3,
+      "status": "updated",
+      "note": "Actualizado en DB.",
+      "links": [
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 113,
+          "reason": "same_category, token_overlap:100, authority:1, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 81,
+          "reason": "token_overlap:75, authority:2, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 65,
+          "reason": "token_overlap:60, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+      "mode": "apply",
+      "changed": true,
+      "links_added": 3,
+      "status": "updated",
+      "note": "Actualizado en DB.",
+      "links": [
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 113,
+          "reason": "same_category, token_overlap:100, authority:1, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 85,
+          "reason": "token_overlap:79, authority:2, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 69,
+          "reason": "token_overlap:64, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "mode": "apply",
+      "changed": true,
+      "links_added": 2,
+      "status": "updated",
+      "note": "Actualizado en DB.",
+      "links": [
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 68,
+          "reason": "token_overlap:62, authority:2, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 63,
+          "reason": "token_overlap:58, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "mode": "apply",
+      "changed": true,
+      "links_added": 3,
+      "status": "updated",
+      "note": "Actualizado en DB.",
+      "links": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 111,
+          "reason": "token_overlap:105, authority:2, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Sobre digestión",
+          "relevance_score": 85,
+          "reason": "same_category, token_overlap:71, authority:2, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 82,
+          "reason": "token_overlap:77, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+      "mode": "apply",
+      "changed": false,
+      "links_added": 0,
+      "status": "skipped_base64",
+      "note": "Contenido con data:image legado; migrar base64 antes de enlazado automático.",
+      "links": []
+    },
+    {
+      "slug": "colon-irritable-que-es-como-identificarlo-y-vivir-mejor",
+      "mode": "apply",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "helicobacter-pylori-que-es-sintomas-y-recuperacion",
+      "mode": "apply",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "ulcera-de-colon-que-significa-y-como-cuidarte",
+      "mode": "apply",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "calculo-renal-sintomas-prevencion-y-cuidados-desde-el-bienestar",
+      "mode": "apply",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "mode": "apply",
+      "changed": false,
+      "links_added": 0,
+      "status": "skipped_base64",
+      "note": "Contenido con data:image legado; migrar base64 antes de enlazado automático.",
+      "links": []
+    }
+  ]
+}

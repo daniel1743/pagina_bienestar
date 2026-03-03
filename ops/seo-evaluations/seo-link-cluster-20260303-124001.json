@@ -1,0 +1,535 @@
+{
+  "generated_at": "2026-03-03T15:40:01.669Z",
+  "site_url": "https://bienestarenclaro.com",
+  "total_articles": 6,
+  "graph_summary": {
+    "orphan_count": 0,
+    "weak_count": 0,
+    "orphan_ratio": 0,
+    "weak_ratio": 0,
+    "related_coverage_count": 6,
+    "related_coverage_ratio": 1,
+    "avg_outlinks": 3.17
+  },
+  "contracts": {
+    "internal_link_contract_sample": [
+      {
+        "source_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+        "suggestions": [
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 99,
+            "reason": "same_category, token_overlap:82, authority:5, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 95,
+            "reason": "token_overlap:86, authority:5, recency:4"
+          },
+          {
+            "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+            "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+            "relevance_score": 78,
+            "reason": "token_overlap:72, authority:2, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+            "relevance_score": 57,
+            "reason": "token_overlap:50, authority:3, recency:4"
+          },
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+            "relevance_score": 54,
+            "reason": "token_overlap:48, authority:2, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+        "suggestions": [
+          {
+            "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+            "anchor_text": "Sobre hígado",
+            "relevance_score": 139,
+            "reason": "same_category, token_overlap:125, authority:2, recency:4"
+          },
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 118,
+            "reason": "token_overlap:109, authority:5, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+            "relevance_score": 95,
+            "reason": "token_overlap:88, authority:3, recency:4"
+          },
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+            "relevance_score": 93,
+            "reason": "token_overlap:87, authority:2, recency:4"
+          },
+          {
+            "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+            "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+            "relevance_score": 92,
+            "reason": "token_overlap:86, authority:2, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+        "suggestions": [
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 118,
+            "reason": "token_overlap:109, authority:5, recency:4"
+          },
+          {
+            "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+            "anchor_text": "Sobre digestión",
+            "relevance_score": 96,
+            "reason": "same_category, token_overlap:82, authority:2, recency:4"
+          },
+          {
+            "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+            "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+            "relevance_score": 83,
+            "reason": "token_overlap:77, authority:2, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+            "relevance_score": 78,
+            "reason": "token_overlap:71, authority:3, recency:4"
+          },
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+            "relevance_score": 77,
+            "reason": "token_overlap:71, authority:2, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+        "suggestions": [
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Sobre hígado",
+            "relevance_score": 142,
+            "reason": "same_category, token_overlap:125, authority:5, recency:4"
+          },
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 86,
+            "reason": "token_overlap:77, authority:5, recency:4"
+          },
+          {
+            "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+            "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+            "relevance_score": 78,
+            "reason": "token_overlap:72, authority:2, recency:4"
+          },
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+            "relevance_score": 75,
+            "reason": "token_overlap:69, authority:2, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+            "relevance_score": 67,
+            "reason": "token_overlap:60, authority:3, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+        "suggestions": [
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Sobre metabolismo",
+            "relevance_score": 126,
+            "reason": "same_category, token_overlap:112, authority:2, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 97,
+            "reason": "token_overlap:88, authority:5, recency:4"
+          },
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 80,
+            "reason": "token_overlap:71, authority:5, recency:4"
+          },
+          {
+            "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+            "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+            "relevance_score": 66,
+            "reason": "token_overlap:60, authority:2, recency:4"
+          },
+          {
+            "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+            "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+            "relevance_score": 56,
+            "reason": "token_overlap:50, authority:2, recency:4"
+          }
+        ]
+      }
+    ],
+    "cluster_contract_sample": [
+      {
+        "cluster_id": "digestion-helicobacter",
+        "pillar_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+        "topic": "helicobacter",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "higado-higado",
+        "pillar_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+        "topic": "higado",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "digestion-estrenimiento-cronico",
+        "pillar_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+        "topic": "estrenimiento-cronico",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "higado-cirrosis",
+        "pillar_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+        "topic": "cirrosis",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "metabolismo-obesidad",
+        "pillar_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+        "topic": "obesidad",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "metabolismo-resistencia",
+        "pillar_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+        "topic": "resistencia",
+        "intent": "informacional",
+        "supporting_slugs": []
+      }
+    ]
+  },
+  "rows": [
+    {
+      "slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+      "title": "Helicobacter pylori: qué es, síntomas y tratamiento",
+      "category": "Digestión",
+      "inlinks": 2,
+      "outlinks": 2,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 99,
+          "reason": "same_category, token_overlap:82, authority:5, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 95,
+          "reason": "token_overlap:86, authority:5, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 78,
+          "reason": "token_overlap:72, authority:2, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+          "relevance_score": 57,
+          "reason": "token_overlap:50, authority:3, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 54,
+          "reason": "token_overlap:48, authority:2, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "title": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+      "category": "Hígado",
+      "inlinks": 5,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Sobre hígado",
+          "relevance_score": 139,
+          "reason": "same_category, token_overlap:125, authority:2, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 118,
+          "reason": "token_overlap:109, authority:5, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+          "relevance_score": 95,
+          "reason": "token_overlap:88, authority:3, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 93,
+          "reason": "token_overlap:87, authority:2, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 92,
+          "reason": "token_overlap:86, authority:2, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "title": "Estreñimiento crónico: entender qué ocurre y cómo recuperar el tránsito intestinal",
+      "category": "Digestión",
+      "inlinks": 5,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 118,
+          "reason": "token_overlap:109, authority:5, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Sobre digestión",
+          "relevance_score": 96,
+          "reason": "same_category, token_overlap:82, authority:2, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 83,
+          "reason": "token_overlap:77, authority:2, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+          "relevance_score": 78,
+          "reason": "token_overlap:71, authority:3, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 77,
+          "reason": "token_overlap:71, authority:2, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "title": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+      "category": "Hígado",
+      "inlinks": 2,
+      "outlinks": 5,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Sobre hígado",
+          "relevance_score": 142,
+          "reason": "same_category, token_overlap:125, authority:5, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 86,
+          "reason": "token_overlap:77, authority:5, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 78,
+          "reason": "token_overlap:72, authority:2, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 75,
+          "reason": "token_overlap:69, authority:2, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+          "relevance_score": 67,
+          "reason": "token_overlap:60, authority:3, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+      "title": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+      "category": "Metabolismo",
+      "inlinks": 3,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 126,
+          "reason": "same_category, token_overlap:112, authority:2, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 97,
+          "reason": "token_overlap:88, authority:5, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 80,
+          "reason": "token_overlap:71, authority:5, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 66,
+          "reason": "token_overlap:60, authority:2, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 56,
+          "reason": "token_overlap:50, authority:2, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+      "title": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+      "category": "Metabolismo",
+      "inlinks": 2,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 127,
+          "reason": "same_category, token_overlap:112, authority:3, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 96,
+          "reason": "token_overlap:87, authority:5, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 80,
+          "reason": "token_overlap:71, authority:5, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 75,
+          "reason": "token_overlap:69, authority:2, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 54,
+          "reason": "token_overlap:48, authority:2, recency:4"
+        }
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "digestion-helicobacter",
+      "topic": "helicobacter",
+      "intent": "informacional",
+      "pillar_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "higado-higado",
+      "topic": "higado",
+      "intent": "informacional",
+      "pillar_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "digestion-estrenimiento-cronico",
+      "topic": "estrenimiento-cronico",
+      "intent": "informacional",
+      "pillar_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "higado-cirrosis",
+      "topic": "cirrosis",
+      "intent": "informacional",
+      "pillar_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "metabolismo-obesidad",
+      "topic": "obesidad",
+      "intent": "informacional",
+      "pillar_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "metabolismo-resistencia",
+      "topic": "resistencia",
+      "intent": "informacional",
+      "pillar_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+      "supporting_slugs": [],
+      "size": 1
+    }
+  ]
+}

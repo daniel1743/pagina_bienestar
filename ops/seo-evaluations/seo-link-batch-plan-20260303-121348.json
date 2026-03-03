@@ -1,0 +1,210 @@
+{
+  "generated_at": "2026-03-03T15:13:48.454Z",
+  "source_report": "seo-link-cluster-20260303-121238.json",
+  "config": {
+    "batch_size": 4,
+    "links_per_article": 3
+  },
+  "summary": {
+    "total_articles": 11,
+    "prioritized_articles": 6,
+    "batches": 2,
+    "orphan_count": 5,
+    "weak_count": 6
+  },
+  "batches": [
+    {
+      "batch_number": 1,
+      "size": 4,
+      "items": [
+        {
+          "source_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "source_title": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "category": "Hígado",
+          "orphan": false,
+          "weak": true,
+          "links_to_add": [
+            {
+              "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+              "anchor_text": "Sobre hígado",
+              "relevance_score": 136,
+              "reason": "same_category, token_overlap:120, authority:4, recency:4",
+              "href": "/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy"
+            },
+            {
+              "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+              "anchor_text": "estreñimiento crónico",
+              "relevance_score": 84,
+              "reason": "token_overlap:77, authority:3, recency:4",
+              "href": "/articulos/estrenimiento-causas-habitos-y-cuando-consultar"
+            },
+            {
+              "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+              "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+              "relevance_score": 75,
+              "reason": "token_overlap:69, authority:2, recency:4",
+              "href": "/articulos/resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla"
+            }
+          ]
+        },
+        {
+          "source_slug": "helicobacter-pylori-que-es-sintomas-y-recuperacion",
+          "source_title": "Helicobacter pylori: qué es, síntomas y recuperación sin mitos",
+          "category": "Digestión",
+          "orphan": true,
+          "weak": true,
+          "links_to_add": [
+            {
+              "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+              "anchor_text": "Sobre digestión",
+              "relevance_score": 80,
+              "reason": "same_category, token_overlap:66, authority:2, recency:4",
+              "href": "/articulos/helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento"
+            },
+            {
+              "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+              "anchor_text": "estreñimiento crónico",
+              "relevance_score": 58,
+              "reason": "same_category, token_overlap:43, authority:3, recency:4",
+              "href": "/articulos/estrenimiento-causas-habitos-y-cuando-consultar"
+            },
+            {
+              "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+              "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+              "relevance_score": 49,
+              "reason": "token_overlap:41, authority:4, recency:4",
+              "href": "/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy"
+            }
+          ]
+        },
+        {
+          "source_slug": "colon-irritable-que-es-como-identificarlo-y-vivir-mejor",
+          "source_title": "Colon irritable: qué es, cómo identificarlo y vivir mejor",
+          "category": "Digestión",
+          "orphan": true,
+          "weak": true,
+          "links_to_add": [
+            {
+              "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+              "anchor_text": "estreñimiento crónico",
+              "relevance_score": 70,
+              "reason": "same_category, token_overlap:55, authority:3, recency:4",
+              "href": "/articulos/estrenimiento-causas-habitos-y-cuando-consultar"
+            },
+            {
+              "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+              "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+              "relevance_score": 51,
+              "reason": "token_overlap:43, authority:4, recency:4",
+              "href": "/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy"
+            },
+            {
+              "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+              "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+              "relevance_score": 44,
+              "reason": "token_overlap:39, authority:1, recency:4",
+              "href": "/articulos/cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico"
+            }
+          ]
+        },
+        {
+          "source_slug": "ulcera-de-colon-que-significa-y-como-cuidarte",
+          "source_title": "Úlcera de colon: qué significa y cómo cuidarte sin entrar en pánico",
+          "category": "Digestión",
+          "orphan": true,
+          "weak": true,
+          "links_to_add": [
+            {
+              "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+              "anchor_text": "estreñimiento crónico",
+              "relevance_score": 56,
+              "reason": "same_category, token_overlap:41, authority:3, recency:4",
+              "href": "/articulos/estrenimiento-causas-habitos-y-cuando-consultar"
+            },
+            {
+              "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+              "anchor_text": "Sobre digestión",
+              "relevance_score": 45,
+              "reason": "same_category, token_overlap:31, authority:2, recency:4",
+              "href": "/articulos/helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento"
+            },
+            {
+              "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+              "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+              "relevance_score": 45,
+              "reason": "token_overlap:37, authority:4, recency:4",
+              "href": "/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "batch_number": 2,
+      "size": 2,
+      "items": [
+        {
+          "source_slug": "calculo-renal-sintomas-prevencion-y-cuidados-desde-el-bienestar",
+          "source_title": "Cálculo renal: síntomas, prevención y cuidados desde el bienestar",
+          "category": "Metabolismo",
+          "orphan": true,
+          "weak": true,
+          "links_to_add": [
+            {
+              "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+              "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+              "relevance_score": 56,
+              "reason": "token_overlap:48, authority:4, recency:4",
+              "href": "/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy"
+            },
+            {
+              "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+              "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+              "relevance_score": 45,
+              "reason": "token_overlap:40, authority:1, recency:4",
+              "href": "/articulos/cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico"
+            },
+            {
+              "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+              "anchor_text": "Sobre metabolismo",
+              "relevance_score": 42,
+              "reason": "same_category, token_overlap:28, authority:2, recency:4",
+              "href": "/articulos/obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza"
+            }
+          ]
+        },
+        {
+          "source_slug": "para-probar-sanitizacion",
+          "source_title": "para probar sanitización",
+          "category": "General",
+          "orphan": true,
+          "weak": true,
+          "links_to_add": [
+            {
+              "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+              "anchor_text": "estreñimiento crónico",
+              "relevance_score": 8,
+              "reason": "token_overlap:1, authority:3, recency:4",
+              "href": "/articulos/estrenimiento-causas-habitos-y-cuando-consultar"
+            },
+            {
+              "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+              "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+              "relevance_score": 8,
+              "reason": "authority:4, recency:4",
+              "href": "/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy"
+            },
+            {
+              "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+              "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+              "relevance_score": 6,
+              "reason": "authority:2, recency:4",
+              "href": "/articulos/resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "quality_warnings": []
+}

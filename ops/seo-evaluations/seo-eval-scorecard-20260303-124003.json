@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-03-03T15:40:03.685Z",
+  "site_url": "https://bienestarenclaro.com",
+  "baseline_file": "seo-eval-baseline-20260303-092658.json",
+  "link_file": "seo-link-cluster-20260303-124001.json",
+  "baseline_generated_at": "2026-03-03T12:26:58.315Z",
+  "dimensions": {
+    "server_first_seo": {
+      "weight": 35,
+      "score": 100,
+      "state": "PASS"
+    },
+    "crawl_budget_sitemap": {
+      "weight": 25,
+      "score": 100,
+      "state": "PASS"
+    },
+    "linking_clusters": {
+      "weight": 20,
+      "score": 97,
+      "state": "PASS"
+    },
+    "operability_monitoring": {
+      "weight": 20,
+      "score": 85,
+      "state": "PASS"
+    }
+  },
+  "weighted_score": 96,
+  "global_state": "PASS",
+  "recommendation": "Mantener arquitectura actual con mejora continua",
+  "diagnostico_lines": [
+    "SEO server-first en source HTML de articulos: PASS en la muestra actual.",
+    "Sitemap/crawl budget tecnico: PASS (endpoint y señales base correctas).",
+    "Enlazado interno + clusters: PASS en la muestra auditada.",
+    "Operabilidad y monitoreo: PASS."
+  ],
+  "next_actions": [
+    "Mantener ciclo semanal de monitoreo y mejora continua."
+  ],
+  "hard_rules": {
+    "server_first_95": true,
+    "sitemap_ok": true,
+    "all_dimensions_pass": true
+  }
+}

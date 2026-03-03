@@ -71,11 +71,11 @@ const buildDimensionScores = (baseline, linkReport) => {
 
   let linkingClusterScore = 0;
   if (linkReport?.graph_summary && Number(linkReport?.total_articles || 0) > 0) {
-    const orphanRatio = Number(linkReport.graph_summary.orphan_ratio || 1);
-    const weakRatio = Number(linkReport.graph_summary.weak_ratio || 1);
-    const coverageRatio = Number(linkReport.graph_summary.related_coverage_ratio || 0);
+    const orphanRatio = Number(linkReport.graph_summary.orphan_ratio ?? 1);
+    const weakRatio = Number(linkReport.graph_summary.weak_ratio ?? 1);
+    const coverageRatio = Number(linkReport.graph_summary.related_coverage_ratio ?? 0);
     const clustersCount = Number((Array.isArray(linkReport.clusters) ? linkReport.clusters.length : 0) || 0);
-    const avgOutlinks = Number(linkReport.graph_summary.avg_outlinks || 0);
+    const avgOutlinks = Number(linkReport.graph_summary.avg_outlinks ?? 0);
 
     const orphanScore = Math.max(0, 100 - Math.round(orphanRatio * 100));
     const weakScore = Math.max(0, 100 - Math.round(weakRatio * 100));

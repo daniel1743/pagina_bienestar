@@ -1,8 +1,44 @@
 import { createClient } from '@supabase/supabase-js';
+import fs from 'node:fs';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://kuacuriiueaxjzzgmqtu.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ARTICLE_IMAGE_BUCKET = process.env.ARTICLE_IMAGE_BUCKET || 'article-images';
+const DEFAULT_SUPABASE_URL = 'https://kuacuriiueaxjzzgmqtu.supabase.co';
+const DEFAULT_ARTICLE_IMAGE_BUCKET = 'article-images';
+const DOTENV_FILES = ['.env.local', '.env'];
+
+const loadDotEnvIfPresent = () => {
+  for (const fileName of DOTENV_FILES) {
+    if (!fileName) continue;
+    try {
+      if (!fs.existsSync(fileName)) continue;
+      const raw = fs.readFileSync(fileName, 'utf8');
+      const lines = raw.split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = String(line || '').trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const idx = trimmed.indexOf('=');
+        if (idx <= 0) continue;
+        const key = trimmed.slice(0, idx).trim();
+        if (!key || process.env[key]) continue;
+        let value = trimmed.slice(idx + 1).trim();
+        if (
+          (value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))
+        ) {
+          value = value.slice(1, -1);
+        }
+        process.env[key] = value;
+      }
+    } catch {
+      // noop
+    }
+  }
+};
+
+const resolveConfig = () => ({
+  supabaseUrl: String(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).trim(),
+  serviceRoleKey: String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim(),
+  articleImageBucket: String(process.env.ARTICLE_IMAGE_BUCKET || DEFAULT_ARTICLE_IMAGE_BUCKET).trim(),
+});
 
 const parseArgs = (argv) => {
   const args = { apply: false, dryRun: true, limit: null, slug: null };
@@ -30,11 +66,11 @@ const parseArgs = (argv) => {
   return args;
 };
 
-const ensureEnv = () => {
-  if (!SUPABASE_URL) {
+const ensureEnv = (config) => {
+  if (!config.supabaseUrl) {
     throw new Error('Falta SUPABASE_URL.');
   }
-  if (!SUPABASE_SERVICE_ROLE_KEY) {
+  if (!config.serviceRoleKey) {
     throw new Error('Falta SUPABASE_SERVICE_ROLE_KEY. Requerido para migración de medios.');
   }
 };
@@ -107,9 +143,11 @@ const buildLegacyPath = (articleId, ext, index) => {
 
 const run = async () => {
   const options = parseArgs(process.argv.slice(2));
-  ensureEnv();
+  await loadDotEnvIfPresent();
+  const config = resolveConfig();
+  ensureEnv(config);
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  const supabase = createClient(config.supabaseUrl, config.serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
@@ -171,7 +209,7 @@ const run = async () => {
       const path = buildLegacyPath(row.id, ext, uploadIndex);
 
       const { error: uploadError } = await supabase.storage
-        .from(ARTICLE_IMAGE_BUCKET)
+        .from(config.articleImageBucket)
         .upload(path, parsed.buffer, {
           upsert: false,
           contentType: parsed.mime,
@@ -185,7 +223,7 @@ const run = async () => {
 
       const {
         data: { publicUrl },
-      } = supabase.storage.from(ARTICLE_IMAGE_BUCKET).getPublicUrl(path);
+      } = supabase.storage.from(config.articleImageBucket).getPublicUrl(path);
 
       if (!publicUrl) {
         detail.errors.push(`public_url_error_${uploadIndex}`);

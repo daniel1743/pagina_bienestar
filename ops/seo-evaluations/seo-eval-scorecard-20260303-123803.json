@@ -1,0 +1,47 @@
+{
+  "generated_at": "2026-03-03T15:38:03.059Z",
+  "site_url": "https://bienestarenclaro.com",
+  "baseline_file": "seo-eval-baseline-20260303-092658.json",
+  "link_file": "seo-link-cluster-20260303-123801.json",
+  "baseline_generated_at": "2026-03-03T12:26:58.315Z",
+  "dimensions": {
+    "server_first_seo": {
+      "weight": 35,
+      "score": 100,
+      "state": "PASS"
+    },
+    "crawl_budget_sitemap": {
+      "weight": 25,
+      "score": 100,
+      "state": "PASS"
+    },
+    "linking_clusters": {
+      "weight": 20,
+      "score": 42,
+      "state": "FAIL"
+    },
+    "operability_monitoring": {
+      "weight": 20,
+      "score": 85,
+      "state": "PASS"
+    }
+  },
+  "weighted_score": 85,
+  "global_state": "FAIL",
+  "recommendation": "Priorizar enlazado interno por lotes y consolidacion de clusters semanticos",
+  "diagnostico_lines": [
+    "SEO server-first en source HTML de articulos: PASS en la muestra actual.",
+    "Sitemap/crawl budget tecnico: PASS (endpoint y señales base correctas).",
+    "Enlazado interno + clusters: FAIL; alta orfandad/debilidad en la red interna.",
+    "Operabilidad y monitoreo: PASS."
+  ],
+  "next_actions": [
+    "Ejecutar lote 1 de enlazado interno y repetir por lotes con seo:links:plan.",
+    "Re-correr seo:eval:links y seo:eval:scorecard tras cada lote."
+  ],
+  "hard_rules": {
+    "server_first_95": true,
+    "sitemap_ok": true,
+    "all_dimensions_pass": false
+  }
+}
