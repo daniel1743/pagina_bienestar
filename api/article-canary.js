@@ -21,9 +21,16 @@ const readCookie = (cookieHeader, key) => {
   const pair = all
     .split(';')
     .map((item) => item.trim())
+    // In case duplicates exist (different domain/path variants),
+    // prefer the last value (usually the most recent override).
+    .reverse()
     .find((item) => item.startsWith(`${key}=`));
   if (!pair) return null;
-  return decodeURIComponent(pair.split('=').slice(1).join('='));
+  try {
+    return decodeURIComponent(pair.split('=').slice(1).join('='));
+  } catch {
+    return pair.split('=').slice(1).join('=');
+  }
 };
 
 const isBotRequest = (userAgent) => BOT_UA_REGEX.test(clean(userAgent));
@@ -53,7 +60,12 @@ const appendSearch = (url, req) => {
   return `${url}${url.includes('?') ? '&' : '?'}${qs}`;
 };
 
-const proxyStable = async (req, res, slug) => {
+const setCanaryHeaders = (res, mode, reason) => {
+  res.setHeader('X-Article-Canary', mode);
+  res.setHeader('X-Canary-Debug', `chosen=${mode};reason=${reason}`);
+};
+
+const proxyStable = async (req, res, slug, mode = 'stable-human', reason = 'default-stable') => {
   const origin = buildOrigin(req);
   const url = `${origin}/api/article-ssr?slug=${encodeURIComponent(slug)}`;
   const response = await fetch(url, {
@@ -69,7 +81,7 @@ const proxyStable = async (req, res, slug) => {
   const cacheControl = response.headers.get('cache-control') || 'no-store';
   res.setHeader('Content-Type', contentType);
   res.setHeader('Cache-Control', cacheControl);
-  res.setHeader('X-Article-Canary', 'stable');
+  setCanaryHeaders(res, mode, reason);
 
   if (req.method === 'HEAD') {
     return res.status(response.status).send('');
@@ -102,23 +114,30 @@ export default async function handler(req, res) {
   const ua = clean(req.headers['user-agent']);
 
   if (!canaryEnabled || !canaryOrigin) {
-    return proxyStable(req, res, slug);
+    return proxyStable(req, res, slug, 'stable-human', 'canary-disabled-or-origin-missing');
   }
 
   if (isBotRequest(ua)) {
-    res.setHeader('X-Article-Canary', 'stable-bot');
-    return proxyStable(req, res, slug);
+    return proxyStable(req, res, slug, 'stable-bot', 'bot-protection');
   }
 
   const cookieValue = readCookie(req.headers.cookie, 'seo_next_canary');
   let bucketEnabled = null;
-  if (cookieValue === '1') bucketEnabled = true;
-  if (cookieValue === '0') bucketEnabled = false;
+  let selectionReason = 'bucket-random';
+  if (cookieValue === '1') {
+    bucketEnabled = true;
+    selectionReason = 'cookie-forced-canary';
+  }
+  if (cookieValue === '0') {
+    bucketEnabled = false;
+    selectionReason = 'cookie-forced-stable';
+  }
 
   if (bucketEnabled === null) {
     const identity = clean(req.headers['x-forwarded-for'] || '') + ua + slug;
     const bucket = hashBucket(identity);
     bucketEnabled = bucket < canaryPercent;
+    selectionReason = `bucket-${bucket}-lt-${canaryPercent}`;
     res.setHeader(
       'Set-Cookie',
       `seo_next_canary=${bucketEnabled ? '1' : '0'}; Max-Age=2592000; Path=/; Secure; SameSite=Lax`,
@@ -126,8 +145,7 @@ export default async function handler(req, res) {
   }
 
   if (!bucketEnabled) {
-    res.setHeader('X-Article-Canary', 'stable-human');
-    return proxyStable(req, res, slug);
+    return proxyStable(req, res, slug, 'stable-human', selectionReason);
   }
 
   const destination = appendSearch(
@@ -135,6 +153,6 @@ export default async function handler(req, res) {
     req,
   );
   res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Article-Canary', 'canary');
+  setCanaryHeaders(res, 'canary', selectionReason);
   return res.redirect(307, destination);
 }

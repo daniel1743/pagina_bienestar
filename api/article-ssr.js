@@ -6,6 +6,8 @@ const DEFAULT_SUPABASE_URL = 'https://kuacuriiueaxjzzgmqtu.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1YWN1cmlpdWVheGp6emdtcXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDg0ODUsImV4cCI6MjA4NzE4NDQ4NX0.fkJIFamjrZOPJ5wHmz204MMlJMnEMKGd87XyCoQcaMI';
 const PUBLISHED_STATUS_VALUES = ['published', 'publicado', 'active'];
+const BOT_UA_REGEX =
+  /(googlebot|adsbot-google|google-inspectiontool|bingbot|yandexbot|duckduckbot|baiduspider|slurp|applebot|facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegrambot|slackbot)/i;
 
 const cleanEnvValue = (value) => String(value || '').trim();
 const isValidSupabaseProjectUrl = (value) =>
@@ -58,6 +60,8 @@ const stripExistingSeoTags = (html) =>
     .replace(/<meta[^>]+property=["']og:[^"']+["'][^>]*>/gi, '')
     .replace(/<link[^>]+rel=["']canonical["'][^>]*>/gi, '')
     .replace(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, '');
+
+const isBotRequest = (userAgent) => BOT_UA_REGEX.test(String(userAgent || ''));
 
 const seoTagsForArticle = (article, slug) => {
   const title = article?.meta_title || `${article?.title || SITE_NAME} - ${SITE_NAME}`;
@@ -147,8 +151,9 @@ const fetchShellHtml = async (origin) => {
 </html>`;
 };
 
-const injectSeoInShell = (shellHtml, seo, article) => {
+const injectSeoInShell = (shellHtml, seo, article, options = {}) => {
   const cleaned = stripExistingSeoTags(shellHtml);
+  const includeFallback = Boolean(options.includeFallbackForBot);
   const seoBlock = `
 <title>${escapeHtml(seo.title)}</title>
 <meta name="description" content="${escapeHtml(seo.description)}" />
@@ -170,6 +175,8 @@ const injectSeoInShell = (shellHtml, seo, article) => {
   const withSeo = /<\/head>/i.test(cleaned)
     ? cleaned.replace(/<\/head>/i, `${seoBlock}\n</head>`)
     : `${cleaned}\n${seoBlock}`;
+
+  if (!includeFallback) return withSeo;
 
   const fallbackArticle = `
 <article id="ssr-article-fallback" style="max-width:850px;margin:40px auto;padding:0 16px;font-family:Georgia,serif;">
@@ -290,12 +297,15 @@ export default async function handler(req, res) {
 
     const shellHtml = await fetchShellHtml(buildOrigin(req));
     const seo = seoTagsForArticle(article, slug);
-    const html = injectSeoInShell(shellHtml, seo, article);
+    const userAgent = String(req.headers['user-agent'] || '');
+    const includeFallbackForBot = isBotRequest(userAgent);
+    const html = injectSeoInShell(shellHtml, seo, article, { includeFallbackForBot });
     const indexable = !article?.no_index;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('X-Article-SSR', '1');
     res.setHeader('X-Article-Source', source);
+    res.setHeader('X-Article-SSR-Fallback', includeFallbackForBot ? 'bot-only' : 'disabled-human');
     res.setHeader('X-Robots-Tag', seo.robots);
     res.setHeader(
       'Cache-Control',
