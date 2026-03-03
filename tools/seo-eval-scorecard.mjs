@@ -117,8 +117,72 @@ const weightedTotal = (dimensions) => {
 const hasBlockingFail = (dimensions) =>
   Object.values(dimensions).some((item) => String(item.state || 'FAIL') !== 'PASS');
 
+const buildRecommendation = (dimensions, globalState) => {
+  if (globalState === 'PASS') return 'Mantener arquitectura actual con mejora continua';
+  if (dimensions.server_first_seo.state !== 'PASS') {
+    return 'Priorizar server-first para articulos antes de escalar contenido';
+  }
+  if (dimensions.linking_clusters.state !== 'PASS') {
+    return 'Priorizar enlazado interno por lotes y consolidacion de clusters semanticos';
+  }
+  if (dimensions.crawl_budget_sitemap.state !== 'PASS') {
+    return 'Corregir arquitectura de sitemap/crawl budget antes de expandir volumen';
+  }
+  return 'Cerrar dimensiones pendientes con evidencia hasta pasar score global';
+};
+
+const buildDiagnosticoLines = (dimensions) => {
+  const lines = [];
+  if (dimensions.server_first_seo.state === 'PASS') {
+    lines.push('SEO server-first en source HTML de articulos: PASS en la muestra actual.');
+  } else {
+    lines.push('SEO server-first en source HTML de articulos: FAIL; metas incompletas en HTML inicial.');
+  }
+
+  if (dimensions.crawl_budget_sitemap.state === 'PASS') {
+    lines.push('Sitemap/crawl budget tecnico: PASS (endpoint y señales base correctas).');
+  } else {
+    lines.push('Sitemap/crawl budget tecnico: FAIL; revisar cobertura y señales de cache/modo.');
+  }
+
+  if (dimensions.linking_clusters.state === 'PASS') {
+    lines.push('Enlazado interno + clusters: PASS en la muestra auditada.');
+  } else {
+    lines.push('Enlazado interno + clusters: FAIL; alta orfandad/debilidad en la red interna.');
+  }
+
+  if (dimensions.operability_monitoring.state === 'PASS') {
+    lines.push('Operabilidad y monitoreo: PASS.');
+  } else {
+    lines.push('Operabilidad y monitoreo: FAIL; faltan señales o estabilidad de control.');
+  }
+
+  return lines;
+};
+
+const buildNextActions = (dimensions) => {
+  const actions = [];
+  if (dimensions.server_first_seo.state !== 'PASS') {
+    actions.push('Desplegar/corregir server-first en /articulos/:slug y revalidar source HTML.');
+    actions.push('Re-ejecutar baseline hasta lograr PASS_SERVER_FIRST >=95%.');
+  }
+  if (dimensions.linking_clusters.state !== 'PASS') {
+    actions.push('Ejecutar lote 1 de enlazado interno y repetir por lotes con seo:links:plan.');
+    actions.push('Re-correr seo:eval:links y seo:eval:scorecard tras cada lote.');
+  }
+  if (dimensions.crawl_budget_sitemap.state !== 'PASS') {
+    actions.push('Corregir señales de sitemap (status/mode/cobertura) y re-auditar.');
+  }
+  if (!actions.length) {
+    actions.push('Mantener ciclo semanal de monitoreo y mejora continua.');
+  }
+  return actions.slice(0, 3);
+};
+
 const md = (payload) => {
   const d = payload.dimensions;
+  const diagnostico = (payload.diagnostico_lines || []).map((line, idx) => `${idx + 1}. ${line}`).join('\n');
+  const acciones = (payload.next_actions || []).map((line, idx) => `${idx + 1}. ${line}`).join('\n');
   return `# SEO Evaluation Scorecard
 
 Fecha: ${payload.generated_at}
@@ -153,15 +217,11 @@ Baseline fuente: ${payload.baseline_file}
 
 ## Diagnostico directo
 
-1. Tu sitemap tecnico esta operativo, pero el HTML inicial de articulos sigue sin metas SEO completas en source.
-2. Con estado actual, la arquitectura queda en **FAIL** para SEO server-first estricto.
-3. El bloque de enlazado + clusters depende del reporte generado por npm run seo:eval:links.
+${diagnostico}
 
 ## Siguiente accion recomendada (P0)
 
-1. Ejecutar migracion server-first para /articulos/[slug] (Next.js App Router o prerender SSR real).
-2. Re-ejecutar baseline y exigir PASS_SERVER_FIRST >=95%.
-3. Completar score de enlaces/clusters con matriz semantica y evidencia de no-huerfanas.
+${acciones}
 `;
 };
 
@@ -178,10 +238,9 @@ const run = () => {
   const dimensions = buildDimensionScores(baseline, linkReport);
   const weightedScore = weightedTotal(dimensions);
   const globalState = hasBlockingFail(dimensions) ? 'FAIL' : 'PASS';
-  const recommendation =
-    globalState === 'PASS'
-      ? 'Mantener arquitectura actual con mejora continua'
-      : 'Migrar a server-first para articulos y cerrar brechas de cluster/enlazado';
+  const recommendation = buildRecommendation(dimensions, globalState);
+  const diagnosticoLines = buildDiagnosticoLines(dimensions);
+  const nextActions = buildNextActions(dimensions);
 
   const payload = {
     generated_at: new Date().toISOString(),
@@ -193,6 +252,8 @@ const run = () => {
     weighted_score: weightedScore,
     global_state: globalState,
     recommendation,
+    diagnostico_lines: diagnosticoLines,
+    next_actions: nextActions,
     hard_rules: {
       server_first_95: Number(dimensions.server_first_seo.score || 0) >= 95,
       sitemap_ok: String(dimensions.crawl_budget_sitemap.state) === 'PASS',

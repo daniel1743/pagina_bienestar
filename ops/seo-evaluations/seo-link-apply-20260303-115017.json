@@ -1,0 +1,223 @@
+{
+  "generated_at": "2026-03-03T14:50:17.828Z",
+  "mode": "dry-run",
+  "source_report": "seo-link-cluster-20260303-115006.json",
+  "config": {
+    "max_links_per_article": 3,
+    "min_relevance": 35,
+    "include_strong": false,
+    "limit": 0,
+    "skip_slugs": [
+      "para-probar-sanitizacion"
+    ]
+  },
+  "summary": {
+    "candidates": 10,
+    "found_in_db": 6,
+    "change_candidates": 6,
+    "updated": 6,
+    "unchanged": 0,
+    "links_added": 17,
+    "errors": 4
+  },
+  "items": [
+    {
+      "slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 2,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 63,
+          "reason": "token_overlap:59, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 57,
+          "reason": "token_overlap:53, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 3,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 99,
+          "reason": "token_overlap:94, authority:1, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Sobre digestión",
+          "relevance_score": 80,
+          "reason": "same_category, token_overlap:68, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 68,
+          "reason": "token_overlap:64, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 3,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 81,
+          "reason": "same_category, token_overlap:68, authority:1, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 81,
+          "reason": "token_overlap:76, authority:1, recency:4"
+        },
+        {
+          "target_slug": "helicobacter-pylori-que-es-sintomas-y-recuperacion",
+          "anchor_text": "Sobre digestión",
+          "relevance_score": 78,
+          "reason": "same_category, token_overlap:66, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 3,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 112,
+          "reason": "same_category, token_overlap:100, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 84,
+          "reason": "token_overlap:79, authority:1, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 64,
+          "reason": "token_overlap:59, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 3,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 113,
+          "reason": "same_category, token_overlap:100, authority:1, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 80,
+          "reason": "token_overlap:75, authority:1, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 63,
+          "reason": "token_overlap:58, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "colon-irritable-que-es-como-identificarlo-y-vivir-mejor",
+      "mode": "dry-run",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "helicobacter-pylori-que-es-sintomas-y-recuperacion",
+      "mode": "dry-run",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "ulcera-de-colon-que-significa-y-como-cuidarte",
+      "mode": "dry-run",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "calculo-renal-sintomas-prevencion-y-cuidados-desde-el-bienestar",
+      "mode": "dry-run",
+      "changed": false,
+      "links_added": 0,
+      "status": "missing",
+      "note": "Artículo no encontrado en DB para ese slug.",
+      "links": []
+    },
+    {
+      "slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 3,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Sobre hígado",
+          "relevance_score": 130,
+          "reason": "same_category, token_overlap:118, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 99,
+          "reason": "token_overlap:94, authority:1, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+          "relevance_score": 84,
+          "reason": "token_overlap:79, authority:1, recency:4"
+        }
+      ]
+    }
+  ]
+}

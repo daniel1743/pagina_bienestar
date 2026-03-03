@@ -12,6 +12,8 @@
     "perf:snapshot": "node tools/perf-snapshot.mjs",
     "seo:eval:baseline": "node tools/seo-eval-baseline.mjs",
     "seo:eval:links": "node tools/seo-link-cluster-eval.mjs",
+    "seo:links:plan": "node tools/seo-link-batch-plan.mjs",
+    "seo:links:apply": "node tools/seo-link-apply.mjs",
     "seo:eval:scorecard": "node tools/seo-eval-scorecard.mjs",
     "seo:eval:all": "npm run seo:eval:baseline && npm run seo:eval:links && npm run seo:eval:scorecard",
     "backup:daily": "pwsh -File tools/backup-supabase.ps1 -Mode daily",

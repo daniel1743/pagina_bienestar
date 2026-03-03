@@ -48,6 +48,22 @@ Genera:
 1. `seo-link-cluster-YYYYMMDD-HHMMSS.json`
 2. `seo-link-cluster-YYYYMMDD-HHMMSS.md`
 
+## Comando plan por lotes de enlazado
+
+```bash
+npm run seo:links:plan
+```
+
+Genera:
+
+1. `seo-link-batch-plan-YYYYMMDD-HHMMSS.json`
+2. `seo-link-batch-plan-YYYYMMDD-HHMMSS.md`
+
+Variables opcionales:
+
+1. `SEO_LINK_BATCH_SIZE` (default: `4`)
+2. `SEO_LINKS_PER_ARTICLE` (default: `3`)
+
 Uso recomendado:
 
 1. `npm run seo:eval:baseline`

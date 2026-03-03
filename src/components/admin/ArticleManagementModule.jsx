@@ -140,6 +140,71 @@ const base64ToBlob = (base64, mime = 'image/webp') => {
   for (let i = 0; i < len; i += 1) bytes[i] = binary.charCodeAt(i);
   return new Blob([bytes], { type: mime });
 };
+const DATA_IMAGE_URL_RE = /^data:(image\/[a-z0-9+.-]+);base64,([\s\S]+)$/i;
+const extensionFromMime = (mime) => {
+  const value = String(mime || '').toLowerCase();
+  if (value.includes('png')) return 'png';
+  if (value.includes('gif')) return 'gif';
+  if (value.includes('jpeg') || value.includes('jpg')) return 'jpg';
+  if (value.includes('webp')) return 'webp';
+  return 'webp';
+};
+const dataImageUrlToFile = (dataUrl, baseName, index = 1) => {
+  const normalized = String(dataUrl || '').replace(/\s+/g, '');
+  const match = normalized.match(DATA_IMAGE_URL_RE);
+  if (!match) throw new Error('Formato data:image inválido.');
+  const mime = String(match[1] || '').toLowerCase();
+  const base64Body = String(match[2] || '').replace(/\s+/g, '');
+  if (!mime || !base64Body) throw new Error('Contenido base64 inválido.');
+  const blob = base64ToBlob(base64Body, mime);
+  const ext = extensionFromMime(mime);
+  const cleanBase = slugify(baseName || 'imagen-legacy') || 'imagen-legacy';
+  const fileName = `${cleanBase}-${Date.now()}-${index}.${ext}`;
+  return new File([blob], fileName, { type: mime, lastModified: Date.now() });
+};
+const migrateFeaturedDataImageToStorage = async (dataUrl, slug) => {
+  const file = dataImageUrlToFile(dataUrl, `${slug}-featured`, 1);
+  const { publicUrl } = await uploadImageToStorage(file, { slug, kind: 'featured' });
+  return publicUrl;
+};
+const migrateInlineDataImagesToStorage = async (html, slug) => {
+  const source = String(html || '');
+  if (!/data:image\//i.test(source) || typeof DOMParser === 'undefined') {
+    return { content: source, converted: 0, failed: 0 };
+  }
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<body>${source}</body>`, 'text/html');
+  const body = doc.body;
+  const inlineImages = Array.from(body.querySelectorAll('img[src^="data:image/"]'));
+  if (!inlineImages.length) return { content: source, converted: 0, failed: 0 };
+
+  let converted = 0;
+  let failed = 0;
+  const cache = new Map();
+
+  for (let index = 0; index < inlineImages.length; index += 1) {
+    const image = inlineImages[index];
+    const rawSrc = String(image.getAttribute('src') || '').replace(/\s+/g, '');
+    if (!rawSrc) continue;
+    try {
+      if (!cache.has(rawSrc)) {
+        const file = dataImageUrlToFile(rawSrc, `${slug}-inline`, index + 1);
+        const { publicUrl } = await uploadImageToStorage(file, { slug, kind: 'inline' });
+        cache.set(rawSrc, publicUrl);
+      }
+      image.setAttribute('src', cache.get(rawSrc));
+      converted += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return {
+    content: body.innerHTML.trim() || '<p></p>',
+    converted,
+    failed,
+  };
+};
 const countImages = (node) => !node ? 0 : (node.type === 'image' ? 1 : 0) + (Array.isArray(node.content) ? node.content.reduce((a, b) => a + countImages(b), 0) : 0);
 const btn = (active = false) => `h-9 min-w-9 px-2 inline-flex items-center justify-center rounded-md border transition ${active ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100' : 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800'}`;
 const escapeHtml = (value) => String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -675,7 +740,7 @@ const ArticleManagementModule = () => {
     const slug = slugify(workingForm.slug);
     const raw = editor?.getHTML() || workingForm.content;
     const normalizedRaw = replaceH1WithH2(raw);
-    const content = sanitizeEditorialHtml(normalizedRaw);
+    let content = sanitizeEditorialHtml(normalizedRaw);
     const resolvedSignature = AUTHOR_SIGNATURES[workingForm.authorSignature] ? workingForm.authorSignature : inferAuthorSignature(workingForm.authorName);
     const resolvedAuthorName =
       AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
@@ -688,7 +753,9 @@ const ArticleManagementModule = () => {
       });
       return null;
     }
-    const safeFeaturedImage = resolveArticleImageUrl(workingForm.featuredImage || '');
+    let safeFeaturedImage = resolveArticleImageUrl(workingForm.featuredImage || '');
+    let migratedFeatured = false;
+    let migratedInline = 0;
     const canonicalUrl = normalizeCanonicalUrl(workingForm.canonical);
     if (workingForm.featuredImage && !safeFeaturedImage) {
       toast({
@@ -697,13 +764,40 @@ const ArticleManagementModule = () => {
         variant: 'destructive',
       });
     }
-    if (isDataImageUrl(safeFeaturedImage) || /data:image\//i.test(content)) {
+    try {
+      if (isDataImageUrl(safeFeaturedImage)) {
+        safeFeaturedImage = await migrateFeaturedDataImageToStorage(safeFeaturedImage, slug);
+        migratedFeatured = true;
+      }
+      if (/data:image\//i.test(content)) {
+        const migrated = await migrateInlineDataImagesToStorage(content, slug);
+        content = sanitizeEditorialHtml(migrated.content);
+        migratedInline = migrated.converted;
+        if (migrated.failed > 0) {
+          throw new Error(`No se pudieron migrar ${migrated.failed} imágenes internas.`);
+        }
+      }
+    } catch (error) {
       toast({
-        title: 'Base64 no permitido',
-        description: 'Convierte imágenes a Storage antes de guardar el artículo.',
+        title: 'No se pudo migrar imágenes base64',
+        description: error?.message || 'Revisa conexión y permisos de Storage, luego intenta nuevamente.',
         variant: 'destructive',
       });
       return null;
+    }
+    if (isDataImageUrl(safeFeaturedImage) || /data:image\//i.test(content)) {
+      toast({
+        title: 'Base64 no permitido',
+        description: 'Aún quedan imágenes en base64. Revisa la imagen destacada y las internas del editor.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+    if (migratedFeatured || migratedInline > 0) {
+      toast({
+        title: 'Imágenes legacy migradas',
+        description: `Se migraron ${migratedFeatured ? 1 : 0} destacada(s) y ${migratedInline} interna(s) a Storage.`,
+      });
     }
     const payload = {
       title: workingForm.title,

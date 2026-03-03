@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-03-03T14:24:15.471Z",
+  "mode": "dry-run",
+  "source_report": "seo-link-cluster-20260303-110944.json",
+  "config": {
+    "max_links_per_article": 3,
+    "min_relevance": 35,
+    "include_strong": false,
+    "limit": 2,
+    "skip_slugs": [
+      "para-probar-sanitizacion"
+    ]
+  },
+  "summary": {
+    "candidates": 2,
+    "found_in_db": 2,
+    "change_candidates": 2,
+    "updated": 2,
+    "unchanged": 0,
+    "links_added": 5,
+    "errors": 0
+  },
+  "items": [
+    {
+      "slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 2,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 63,
+          "reason": "token_overlap:59, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+          "relevance_score": 57,
+          "reason": "token_overlap:53, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "mode": "dry-run",
+      "changed": true,
+      "links_added": 3,
+      "status": "planned",
+      "note": "Cambio planificado (sin escribir DB).",
+      "links": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 99,
+          "reason": "token_overlap:94, authority:1, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Sobre digestión",
+          "relevance_score": 80,
+          "reason": "same_category, token_overlap:68, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 68,
+          "reason": "token_overlap:64, recency:4"
+        }
+      ]
+    }
+  ]
+}
