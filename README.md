@@ -129,7 +129,22 @@ tools/
   generate-sitemap.js
   generate-llms.js
 documentos md/
+apps/
+  web-next/
 ```
+
+## Migracion Next.js (Server-First para articulos)
+
+Se agrego una app paralela en `apps/web-next` para migrar `"/articulos/[slug]"` a HTML server-first con ISR.
+
+Incluye:
+1. `generateMetadata` por articulo (title/description/canonical/robots/OG/Twitter).
+2. JSON-LD (`Article` + `BreadcrumbList`) en HTML inicial.
+3. `sitemap.xml` y `robots.txt` en App Router.
+4. Canary en app actual via `api/article-canary.js` con rollback inmediato a `api/article-ssr`.
+
+Guia operativa:
+1. `documentos md/21-migracion-next-server-first-fase-1-a-5.md`
 
 ## Despliegue en Vercel
 

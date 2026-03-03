@@ -6,7 +6,7 @@
     },
     {
       "source": "/articulos/:slug",
-      "destination": "/api/article-ssr?slug=:slug"
+      "destination": "/api/article-canary?slug=:slug"
     },
     {
       "source": "/((?!api/|assets/|favicon.ico|robots.txt|sitemap.xml|llms.txt).*)",

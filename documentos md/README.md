@@ -17,6 +17,9 @@ Esta carpeta centraliza los avances recientes de la pagina.
 - `18-plan-implementacion-por-fases-eficiente-sin-errores.md`: plan operativo por fases con gates y controles anti-error para ejecución.
 - `19-ejecucion-lote-1-enlazado-interno.md`: guia operativa para ejecutar el primer lote de enlazado interno desde CMS.
 - `20-enlazado-interno-automatico-funcionamiento-y-reglas.md`: motor automático de enlazado interno (dry-run/apply), reglas de operación, reportes y roadmap de mejora.
+- `21-migracion-next-server-first-fase-1-a-5.md`: implementación técnica de migración a Next.js App Router (artículos server-first, sitemap/robots, canary y rollback).
+- `22-baseline-qa-migracion-next.md`: baseline operativo de QA (6 slugs) con SLO y criterios go/no-go para canary y cutover.
+- `23-canary-vercel-next-migracion-paso-a-paso.md`: guía manual completa para desplegar Next en Vercel, activar canary 10%, validar headers/SEO y ejecutar rollback.
 
 ## Ultima actualizacion
 
