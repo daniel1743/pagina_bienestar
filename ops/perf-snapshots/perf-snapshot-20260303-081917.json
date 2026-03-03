@@ -1,0 +1,73 @@
+{
+  "generated_at": "2026-03-03T11:19:17.636Z",
+  "site_url": "https://bienestarenclaro.com",
+  "urls_checked": 6,
+  "checks": [
+    {
+      "url": "https://bienestarenclaro.com/",
+      "status": 200,
+      "finalUrl": "https://bienestarenclaro.com/?perf_ts=1772536756717",
+      "ttfb_ms": 103,
+      "total_ms": 118,
+      "bytes": 4468,
+      "cache_control": "public, max-age=0, must-revalidate",
+      "x_vercel_cache": "HIT",
+      "age": "742"
+    },
+    {
+      "url": "https://bienestarenclaro.com/articulos",
+      "status": 200,
+      "finalUrl": "https://bienestarenclaro.com/articulos?perf_ts=1772536756835",
+      "ttfb_ms": 94,
+      "total_ms": 96,
+      "bytes": 4468,
+      "cache_control": "public, max-age=0, must-revalidate",
+      "x_vercel_cache": "HIT",
+      "age": "60667"
+    },
+    {
+      "url": "https://bienestarenclaro.com/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "status": 200,
+      "finalUrl": "https://bienestarenclaro.com/articulos/higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy?perf_ts=1772536756931",
+      "ttfb_ms": 90,
+      "total_ms": 92,
+      "bytes": 4468,
+      "cache_control": "public, max-age=0, must-revalidate",
+      "x_vercel_cache": "HIT",
+      "age": "60668"
+    },
+    {
+      "url": "https://bienestarenclaro.com/articulos/cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "status": 200,
+      "finalUrl": "https://bienestarenclaro.com/articulos/cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico?perf_ts=1772536757023",
+      "ttfb_ms": 84,
+      "total_ms": 86,
+      "bytes": 4468,
+      "cache_control": "public, max-age=0, must-revalidate",
+      "x_vercel_cache": "HIT",
+      "age": "60668"
+    },
+    {
+      "url": "https://bienestarenclaro.com/articulos/estrenimiento-causas-habitos-y-cuando-consultar",
+      "status": 200,
+      "finalUrl": "https://bienestarenclaro.com/articulos/estrenimiento-causas-habitos-y-cuando-consultar?perf_ts=1772536757109",
+      "ttfb_ms": 103,
+      "total_ms": 107,
+      "bytes": 4468,
+      "cache_control": "public, max-age=0, must-revalidate",
+      "x_vercel_cache": "HIT",
+      "age": "60668"
+    },
+    {
+      "url": "https://bienestarenclaro.com/sitemap.xml",
+      "status": 200,
+      "finalUrl": "https://bienestarenclaro.com/sitemap.xml?perf_ts=1772536757216",
+      "ttfb_ms": 418,
+      "total_ms": 420,
+      "bytes": 4423,
+      "cache_control": "public, max-age=0, must-revalidate",
+      "x_vercel_cache": "MISS",
+      "age": "0"
+    }
+  ]
+}

@@ -9,6 +9,11 @@
     "build:sitemap-static": "node tools/generate-sitemap.js",
     "preview": "vite preview --host :: --port 3000",
     "migrate:article-base64": "node tools/migrate-article-base64-images.mjs --dry-run",
+    "perf:snapshot": "node tools/perf-snapshot.mjs",
+    "backup:daily": "pwsh -File tools/backup-supabase.ps1 -Mode daily",
+    "backup:predeploy": "pwsh -File tools/backup-supabase.ps1 -Mode predeploy",
+    "backup:tag:predeploy": "pwsh -File tools/backup-predeploy.ps1",
+    "restore:storage": "node tools/restore-storage-upload.mjs",
     "lint": "eslint . --quiet",
     "lint:warn": "eslint ."
   },
