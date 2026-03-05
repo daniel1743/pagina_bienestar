@@ -51,6 +51,7 @@ import {
   ListOrdered,
   Minus,
   Palette,
+  Paperclip,
   Plus,
   Quote,
   Save,
@@ -70,6 +71,8 @@ const MAX_IMAGE_BYTES = 300 * 1024;
 const MAX_IMAGE_WIDTH = 1600;
 const IMAGE_QUALITY_START = 0.8;
 const IMAGE_QUALITY_MIN = 0.6;
+const MAX_META_TITLE_LEN = 60;
+const MAX_META_DESCRIPTION_LEN = 160;
 const WEBP_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*\.webp$/;
 const AUTHOR_SIGNATURES = {
   brand: { key: 'brand', name: 'Bienestar en Claro', avatar: '/branding/monogram-bc-180.png' },
@@ -306,6 +309,49 @@ const compactArticleMetaStore = (store) => {
     acc[key] = stripLargeLocalMetaFields(value);
     return acc;
   }, {});
+};
+const extractMissingColumnFromSupabaseError = (error) => {
+  const text = [error?.message, error?.details, error?.hint]
+    .filter(Boolean)
+    .join(' | ');
+  if (!text) return null;
+
+  const patterns = [
+    /Could not find the '([^']+)' column/i,
+    /column ["']?([a-z0-9_]+)["']? of relation/i,
+    /record ["']?([a-z0-9_]+)["']? has no field/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+
+  return null;
+};
+const executeArticlesMutationWithFallback = async ({ payload, mutate }) => {
+  let candidatePayload = { ...payload };
+  let lastError = null;
+  const removedColumns = [];
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const { data, error } = await mutate(candidatePayload);
+    if (!error) {
+      return { data, error: null, payload: candidatePayload, removedColumns };
+    }
+
+    lastError = error;
+    const missingColumn = extractMissingColumnFromSupabaseError(error);
+    if (!missingColumn || !Object.prototype.hasOwnProperty.call(candidatePayload, missingColumn)) {
+      return { data: null, error: lastError, payload: candidatePayload, removedColumns };
+    }
+
+    const { [missingColumn]: _omit, ...rest } = candidatePayload;
+    candidatePayload = rest;
+    removedColumns.push(missingColumn);
+  }
+
+  return { data: null, error: lastError, payload: candidatePayload, removedColumns };
 };
 const articleInternalUrl = (slug) => `/articulos/${slug}`;
 const canvasToWebpBlob = (canvas, quality) =>
@@ -736,7 +782,19 @@ const ArticleManagementModule = () => {
   const saveArticle = async (overrides = {}) => {
     const workingForm = { ...form, ...overrides };
     if (!workingForm.title.trim() || !workingForm.slug.trim()) { toast({ title: 'Título y slug obligatorios', variant: 'destructive' }); return null; }
-    if (workingForm.metaTitle.length > 60 || workingForm.metaDescription.length > 160) toast({ title: 'Advertencia SEO', description: 'Meta title recomendado: hasta 60 caracteres. Meta description: hasta 160.' });
+    const normalizedMetaTitle = String(workingForm.metaTitle || '').trim();
+    const normalizedMetaDescription = String(workingForm.metaDescription || '').trim();
+    const safeMetaTitle = normalizedMetaTitle.slice(0, MAX_META_TITLE_LEN);
+    const safeMetaDescription = normalizedMetaDescription.slice(0, MAX_META_DESCRIPTION_LEN);
+    const metaWasTruncated =
+      normalizedMetaTitle.length > MAX_META_TITLE_LEN ||
+      normalizedMetaDescription.length > MAX_META_DESCRIPTION_LEN;
+    if (metaWasTruncated) {
+      toast({
+        title: 'SEO ajustado automáticamente',
+        description: `Meta title máximo ${MAX_META_TITLE_LEN} y meta description máximo ${MAX_META_DESCRIPTION_LEN}.`,
+      });
+    }
     const slug = slugify(workingForm.slug);
     const raw = editor?.getHTML() || workingForm.content;
     const normalizedRaw = replaceH1WithH2(raw);
@@ -808,8 +866,8 @@ const ArticleManagementModule = () => {
       image_url: safeFeaturedImage || null,
       author: resolvedAuthorName,
       status: workingForm.status,
-      meta_title: workingForm.metaTitle?.trim() || null,
-      meta_description: workingForm.metaDescription?.trim() || null,
+      meta_title: safeMetaTitle || null,
+      meta_description: safeMetaDescription || null,
       canonical_url: canonicalUrl,
       no_index: Boolean(workingForm.noIndex),
       focus_keyword: workingForm.focusKeyword?.trim() || null,
@@ -825,12 +883,22 @@ const ArticleManagementModule = () => {
     const shouldUpdate = Boolean(workingForm.id) && !String(workingForm.id).startsWith('local-');
     if (shouldUpdate) {
       try {
-        let { error } = await supabase.from('articles').update(payload).eq('id', workingForm.id);
-        if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ error } = await supabase.from('articles').update(without).eq('id', workingForm.id)); }
+        const { error, removedColumns } = await executeArticlesMutationWithFallback({
+          payload,
+          mutate: (candidatePayload) =>
+            supabase.from('articles').update(candidatePayload).eq('id', workingForm.id),
+        });
         if (error) {
           toast({ title: 'Guardado remoto falló', description: error.message, variant: 'destructive' });
         } else {
           savedRemotely = true;
+          if (removedColumns.length) {
+            toast({
+              title: 'Publicado con compatibilidad',
+              description: `La tabla articles no tiene columnas: ${removedColumns.join(', ')}.`,
+              variant: 'destructive',
+            });
+          }
         }
       } catch (error) {
         toast({
@@ -841,14 +909,24 @@ const ArticleManagementModule = () => {
       }
     } else {
       try {
-        let { data, error } = await supabase.from('articles').insert([payload]).select('id').single();
-        if (error && error.message?.toLowerCase().includes('status')) { const { status, ...without } = payload; ({ data, error } = await supabase.from('articles').insert([without]).select('id').single()); }
+        const { data, error, removedColumns } = await executeArticlesMutationWithFallback({
+          payload,
+          mutate: (candidatePayload) =>
+            supabase.from('articles').insert([candidatePayload]).select('id').single(),
+        });
         if (error) {
           id = `local-${Date.now()}`;
           toast({ title: 'Guardado local', description: error.message || 'No se pudo guardar en Supabase.', variant: 'destructive' });
         } else {
           id = data.id;
           savedRemotely = true;
+          if (removedColumns.length) {
+            toast({
+              title: 'Publicado con compatibilidad',
+              description: `La tabla articles no tiene columnas: ${removedColumns.join(', ')}.`,
+              variant: 'destructive',
+            });
+          }
         }
       } catch (error) {
         id = `local-${Date.now()}`;
@@ -1496,52 +1574,6 @@ const ArticleManagementModule = () => {
                 </Button>
               </div>
 
-              <div className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-100">Sugerencias de enlaces internos</p>
-                  <p className="text-xs text-slate-400">Basado en título, categoría y keywords</p>
-                </div>
-                {internalLinkSuggestions.length ? (
-                  <div className="space-y-2">
-                    {internalLinkSuggestions.map((suggestion) => (
-                      <div
-                        key={`${suggestion.slug}-${suggestion.id}`}
-                        className="rounded-lg border border-slate-700 bg-slate-900/60 p-2"
-                      >
-                        <p className="text-sm font-medium text-slate-100 line-clamp-2">
-                          {suggestion.title}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          {suggestion.href} · relevancia {suggestion.relevance}
-                        </p>
-                        <div className="mt-2 flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => insertSuggestedInternalLink(suggestion)}
-                          >
-                            <Link2 className="w-4 h-4 mr-1" />
-                            Insertar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyInternalLink(suggestion)}
-                          >
-                            <Copy className="w-4 h-4 mr-1" />
-                            Copiar URL
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400">
-                    Aún no hay coincidencias claras. Completa título, keywords o categoría para mejorar sugerencias.
-                  </p>
-                )}
-              </div>
-
               <div className="sticky top-2 z-20 rounded-xl border border-slate-700 bg-slate-950/95 backdrop-blur">
                 <input
                   ref={quickImageInputRef}
@@ -1574,6 +1606,56 @@ const ArticleManagementModule = () => {
                 </div>
                 <div className="p-2 flex flex-wrap gap-2 items-center">
                   <div className="flex-1 min-w-[220px]"><Input value={linkDraft.url} onChange={(e) => setLinkDraft((p) => ({ ...p, url: e.target.value }))} placeholder="Enlace interno o externo" /></div>
+                  <details className="group relative [&_summary::-webkit-details-marker]:hidden">
+                    <summary className={btn(false)}>
+                      <Paperclip className="w-4 h-4 mr-2" />
+                      Clip enlaces ({internalLinkSuggestions.length})
+                    </summary>
+                    <div className="absolute right-0 top-11 z-[75] w-[360px] max-h-80 overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 shadow-2xl">
+                      <p className="px-2 py-1 text-[11px] text-slate-400">
+                        Sugerencias automáticas por título, categoría y keywords.
+                      </p>
+                      {internalLinkSuggestions.length ? (
+                        <div className="space-y-2">
+                          {internalLinkSuggestions.map((suggestion) => (
+                            <div
+                              key={`${suggestion.slug}-${suggestion.id}`}
+                              className="rounded-md border border-slate-700 bg-slate-900/70 p-2"
+                            >
+                              <p className="text-xs font-semibold text-slate-100 line-clamp-2">
+                                {suggestion.title}
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-1">
+                                {suggestion.href} · relevancia {suggestion.relevance}
+                              </p>
+                              <div className="mt-2 flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => insertSuggestedInternalLink(suggestion)}
+                                >
+                                  <Link2 className="w-4 h-4 mr-1" />
+                                  Insertar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyInternalLink(suggestion)}
+                                >
+                                  <Copy className="w-4 h-4 mr-1" />
+                                  Copiar URL
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="px-2 py-2 text-xs text-slate-400">
+                          Aún no hay coincidencias claras. Completa título, keywords o categoría.
+                        </p>
+                      )}
+                    </div>
+                  </details>
                   <label className="text-xs text-slate-300 flex items-center gap-2"><input type="checkbox" checked={linkDraft.newTab} onChange={(e) => setLinkDraft((p) => ({ ...p, newTab: e.target.checked }))} className="h-4 w-4 accent-emerald-500" />Nueva pestaña</label>
                   <Button variant="outline" onClick={applyLink}><Link2 className="w-4 h-4 mr-2" />Insertar enlace</Button>
                   <Button variant="outline" onClick={() => editor?.chain().focus().unsetLink().run()}><Link2Off className="w-4 h-4 mr-2" />Quitar enlace</Button>
