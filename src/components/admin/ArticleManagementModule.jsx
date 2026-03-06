@@ -1608,58 +1608,56 @@ const ArticleManagementModule = () => {
                 </div>
                 <div className="p-2 flex flex-wrap gap-2 items-center">
                   <div className="flex-1 min-w-[220px]"><Input value={linkDraft.url} onChange={(e) => setLinkDraft((p) => ({ ...p, url: e.target.value }))} placeholder="Enlace interno o externo" /></div>
-                  {false && (
-                    <details className="group relative [&_summary::-webkit-details-marker]:hidden">
-                      <summary className={btn(false)}>
-                        <Paperclip className="w-4 h-4 mr-2" />
-                        Clip enlaces ({internalLinkSuggestions.length})
-                      </summary>
-                      <div className="absolute right-0 top-11 z-[75] w-[360px] max-h-80 overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 shadow-2xl">
-                        <p className="px-2 py-1 text-[11px] text-slate-400">
-                          Sugerencias automáticas por título, categoría y keywords.
-                        </p>
-                        {internalLinkSuggestions.length ? (
-                          <div className="space-y-2">
-                            {internalLinkSuggestions.map((suggestion) => (
-                              <div
-                                key={`${suggestion.slug}-${suggestion.id}`}
-                                className="rounded-md border border-slate-700 bg-slate-900/70 p-2"
-                              >
-                                <p className="text-xs font-semibold text-slate-100 line-clamp-2">
-                                  {suggestion.title}
-                                </p>
-                                <p className="text-[11px] text-slate-400 mt-1">
-                                  {suggestion.href} · relevancia {suggestion.relevance}
-                                </p>
-                                <div className="mt-2 flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => insertSuggestedInternalLink(suggestion)}
-                                  >
-                                    <Link2 className="w-4 h-4 mr-1" />
-                                    Insertar
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => copyInternalLink(suggestion)}
-                                  >
-                                    <Copy className="w-4 h-4 mr-1" />
-                                    Copiar URL
-                                  </Button>
-                                </div>
+                  <details className="group relative [&_summary::-webkit-details-marker]:hidden">
+                    <summary className={btn(false)}>
+                      <Paperclip className="w-4 h-4 mr-2" />
+                      Clip enlaces ({internalLinkSuggestions.length})
+                    </summary>
+                    <div className="absolute right-0 top-11 z-[75] w-[360px] max-h-80 overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 shadow-2xl">
+                      <p className="px-2 py-1 text-[11px] text-slate-400">
+                        Sugerencias automáticas por título, categoría y keywords.
+                      </p>
+                      {internalLinkSuggestions.length ? (
+                        <div className="space-y-2">
+                          {internalLinkSuggestions.map((suggestion) => (
+                            <div
+                              key={`${suggestion.slug}-${suggestion.id}`}
+                              className="rounded-md border border-slate-700 bg-slate-900/70 p-2"
+                            >
+                              <p className="text-xs font-semibold text-slate-100 line-clamp-2">
+                                {suggestion.title}
+                              </p>
+                              <p className="text-[11px] text-slate-400 mt-1">
+                                {suggestion.href} · relevancia {suggestion.relevance}
+                              </p>
+                              <div className="mt-2 flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => insertSuggestedInternalLink(suggestion)}
+                                >
+                                  <Link2 className="w-4 h-4 mr-1" />
+                                  Insertar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => copyInternalLink(suggestion)}
+                                >
+                                  <Copy className="w-4 h-4 mr-1" />
+                                  Copiar URL
+                                </Button>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="px-2 py-2 text-xs text-slate-400">
-                            Aún no hay coincidencias claras. Completa título, keywords o categoría.
-                          </p>
-                        )}
-                      </div>
-                    </details>
-                  )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="px-2 py-2 text-xs text-slate-400">
+                          Aún no hay coincidencias claras. Completa título, keywords o categoría.
+                        </p>
+                      )}
+                    </div>
+                  </details>
                   <label className="text-xs text-slate-300 flex items-center gap-2"><input type="checkbox" checked={linkDraft.newTab} onChange={(e) => setLinkDraft((p) => ({ ...p, newTab: e.target.checked }))} className="h-4 w-4 accent-emerald-500" />Nueva pestaña</label>
                   <Button variant="outline" onClick={applyLink}><Link2 className="w-4 h-4 mr-2" />Insertar enlace</Button>
                   <Button variant="outline" onClick={() => editor?.chain().focus().unsetLink().run()}><Link2Off className="w-4 h-4 mr-2" />Quitar enlace</Button>
