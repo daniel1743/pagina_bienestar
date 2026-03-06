@@ -1526,23 +1526,25 @@ const ArticleManagementModule = () => {
                 <div><Label>Video embebido</Label><Input value={form.videoEmbed} onChange={(e) => setForm((p) => ({ ...p, videoEmbed: e.target.value }))} placeholder="URL YouTube/TikTok/Vimeo" /></div>
               </div>
 
-              <div id="internal-image-panel" className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 space-y-3">
-                <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold text-slate-100">Imágenes internas</p><p className="text-xs text-slate-400">Máximo {MAX_IMAGES} | 300KB | WebP final automático | ancho máx. {MAX_IMAGE_WIDTH}px</p></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div><Label>Subida desde panel</Label><Input type="file" accept="image/*" onChange={onInternalFile} disabled={isOptimizingInternalImage} /></div>
-                  <div><Label>Posicionamiento</Label><select value={internalDisplay} onChange={(e) => setInternalDisplay(e.target.value)} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100"><option value="full">Ancho completo</option><option value="center">Centrada</option><option value="caption">Con caption</option></select></div>
-                  <div><Label>ALT recomendado</Label><Input value={internalAlt} onChange={(e) => setInternalAlt(e.target.value)} placeholder="Se completa automáticamente si lo dejas vacío" /></div>
-                  <div><Label>Descripción opcional</Label><Input value={internalCaption} onChange={(e) => setInternalCaption(e.target.value)} placeholder="Caption breve" /></div>
+              {false && (
+                <div id="internal-image-panel" className="rounded-xl border border-slate-700 bg-slate-950/40 p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold text-slate-100">Imágenes internas</p><p className="text-xs text-slate-400">Máximo {MAX_IMAGES} | 300KB | WebP final automático | ancho máx. {MAX_IMAGE_WIDTH}px</p></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div><Label>Subida desde panel</Label><Input type="file" accept="image/*" onChange={onInternalFile} disabled={isOptimizingInternalImage} /></div>
+                    <div><Label>Posicionamiento</Label><select value={internalDisplay} onChange={(e) => setInternalDisplay(e.target.value)} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100"><option value="full">Ancho completo</option><option value="center">Centrada</option><option value="caption">Con caption</option></select></div>
+                    <div><Label>ALT recomendado</Label><Input value={internalAlt} onChange={(e) => setInternalAlt(e.target.value)} placeholder="Se completa automáticamente si lo dejas vacío" /></div>
+                    <div><Label>Descripción opcional</Label><Input value={internalCaption} onChange={(e) => setInternalCaption(e.target.value)} placeholder="Caption breve" /></div>
+                  </div>
+                  {isOptimizingInternalImage ? <p className="text-xs text-emerald-300">Optimizando imagen a WebP...</p> : null}
+                  {optimizedInternalInfo ? (
+                    <p className="text-xs text-slate-300">
+                      Optimizada ({optimizedInternalInfo.mode === 'server' ? 'servidor' : 'cliente'}): {(optimizedInternalInfo.bytes / 1024).toFixed(1)}KB · {optimizedInternalInfo.width}x{optimizedInternalInfo.height} · calidad {(optimizedInternalInfo.quality * 100).toFixed(0)}%
+                    </p>
+                  ) : null}
+                  {internalPreview ? <img src={internalPreview} alt="preview" className="max-h-52 rounded-md object-contain w-full bg-slate-950/60 border border-slate-700" /> : null}
+                  <div className="flex items-center justify-between gap-2 flex-wrap"><p className="text-xs text-slate-400">Nombre SEO final automático: <code>palabras-clave-separadas-por-guiones.webp</code></p><Button variant="outline" onClick={insertInternalImage} disabled={isOptimizingInternalImage}><ImagePlus className="w-4 h-4 mr-2" />Insertar imagen</Button></div>
                 </div>
-                {isOptimizingInternalImage ? <p className="text-xs text-emerald-300">Optimizando imagen a WebP...</p> : null}
-                {optimizedInternalInfo ? (
-                  <p className="text-xs text-slate-300">
-                    Optimizada ({optimizedInternalInfo.mode === 'server' ? 'servidor' : 'cliente'}): {(optimizedInternalInfo.bytes / 1024).toFixed(1)}KB · {optimizedInternalInfo.width}x{optimizedInternalInfo.height} · calidad {(optimizedInternalInfo.quality * 100).toFixed(0)}%
-                  </p>
-                ) : null}
-                {internalPreview ? <img src={internalPreview} alt="preview" className="max-h-52 rounded-md object-contain w-full bg-slate-950/60 border border-slate-700" /> : null}
-                <div className="flex items-center justify-between gap-2 flex-wrap"><p className="text-xs text-slate-400">Nombre SEO final automático: <code>palabras-clave-separadas-por-guiones.webp</code></p><Button variant="outline" onClick={insertInternalImage} disabled={isOptimizingInternalImage}><ImagePlus className="w-4 h-4 mr-2" />Insertar imagen</Button></div>
-              </div>
+              )}
 
               <div>
                 <Label>Enlaces externos</Label>
@@ -1606,56 +1608,58 @@ const ArticleManagementModule = () => {
                 </div>
                 <div className="p-2 flex flex-wrap gap-2 items-center">
                   <div className="flex-1 min-w-[220px]"><Input value={linkDraft.url} onChange={(e) => setLinkDraft((p) => ({ ...p, url: e.target.value }))} placeholder="Enlace interno o externo" /></div>
-                  <details className="group relative [&_summary::-webkit-details-marker]:hidden">
-                    <summary className={btn(false)}>
-                      <Paperclip className="w-4 h-4 mr-2" />
-                      Clip enlaces ({internalLinkSuggestions.length})
-                    </summary>
-                    <div className="absolute right-0 top-11 z-[75] w-[360px] max-h-80 overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 shadow-2xl">
-                      <p className="px-2 py-1 text-[11px] text-slate-400">
-                        Sugerencias automáticas por título, categoría y keywords.
-                      </p>
-                      {internalLinkSuggestions.length ? (
-                        <div className="space-y-2">
-                          {internalLinkSuggestions.map((suggestion) => (
-                            <div
-                              key={`${suggestion.slug}-${suggestion.id}`}
-                              className="rounded-md border border-slate-700 bg-slate-900/70 p-2"
-                            >
-                              <p className="text-xs font-semibold text-slate-100 line-clamp-2">
-                                {suggestion.title}
-                              </p>
-                              <p className="text-[11px] text-slate-400 mt-1">
-                                {suggestion.href} · relevancia {suggestion.relevance}
-                              </p>
-                              <div className="mt-2 flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => insertSuggestedInternalLink(suggestion)}
-                                >
-                                  <Link2 className="w-4 h-4 mr-1" />
-                                  Insertar
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => copyInternalLink(suggestion)}
-                                >
-                                  <Copy className="w-4 h-4 mr-1" />
-                                  Copiar URL
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="px-2 py-2 text-xs text-slate-400">
-                          Aún no hay coincidencias claras. Completa título, keywords o categoría.
+                  {false && (
+                    <details className="group relative [&_summary::-webkit-details-marker]:hidden">
+                      <summary className={btn(false)}>
+                        <Paperclip className="w-4 h-4 mr-2" />
+                        Clip enlaces ({internalLinkSuggestions.length})
+                      </summary>
+                      <div className="absolute right-0 top-11 z-[75] w-[360px] max-h-80 overflow-y-auto rounded-lg border border-slate-700 bg-slate-950 p-2 shadow-2xl">
+                        <p className="px-2 py-1 text-[11px] text-slate-400">
+                          Sugerencias automáticas por título, categoría y keywords.
                         </p>
-                      )}
-                    </div>
-                  </details>
+                        {internalLinkSuggestions.length ? (
+                          <div className="space-y-2">
+                            {internalLinkSuggestions.map((suggestion) => (
+                              <div
+                                key={`${suggestion.slug}-${suggestion.id}`}
+                                className="rounded-md border border-slate-700 bg-slate-900/70 p-2"
+                              >
+                                <p className="text-xs font-semibold text-slate-100 line-clamp-2">
+                                  {suggestion.title}
+                                </p>
+                                <p className="text-[11px] text-slate-400 mt-1">
+                                  {suggestion.href} · relevancia {suggestion.relevance}
+                                </p>
+                                <div className="mt-2 flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => insertSuggestedInternalLink(suggestion)}
+                                  >
+                                    <Link2 className="w-4 h-4 mr-1" />
+                                    Insertar
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => copyInternalLink(suggestion)}
+                                  >
+                                    <Copy className="w-4 h-4 mr-1" />
+                                    Copiar URL
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="px-2 py-2 text-xs text-slate-400">
+                            Aún no hay coincidencias claras. Completa título, keywords o categoría.
+                          </p>
+                        )}
+                      </div>
+                    </details>
+                  )}
                   <label className="text-xs text-slate-300 flex items-center gap-2"><input type="checkbox" checked={linkDraft.newTab} onChange={(e) => setLinkDraft((p) => ({ ...p, newTab: e.target.checked }))} className="h-4 w-4 accent-emerald-500" />Nueva pestaña</label>
                   <Button variant="outline" onClick={applyLink}><Link2 className="w-4 h-4 mr-2" />Insertar enlace</Button>
                   <Button variant="outline" onClick={() => editor?.chain().focus().unsetLink().run()}><Link2Off className="w-4 h-4 mr-2" />Quitar enlace</Button>
