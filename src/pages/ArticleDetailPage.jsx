@@ -28,23 +28,41 @@ const getAuthorPresentation = (authorName) => {
   }
   return { name: 'Bienestar en Claro', avatar: '/branding/monogram-bc-180.png' };
 };
+const formatArticleDate = (value) => {
+  if (!value) return 'No disponible';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'No disponible';
+  return date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+const SITE_ORIGIN = (() => {
+  try {
+    return new URL(SITE_URL).origin;
+  } catch {
+    return 'https://bienestarenclaro.com';
+  }
+})();
 
 const buildCanonicalUrl = (canonicalUrl, slug) => {
   const raw = String(canonicalUrl || '').trim();
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-  if (raw.startsWith('/')) return `${SITE_URL}${raw}`;
-  return `${SITE_URL}/articulos/${slug}`;
-};
-const upsertHeadMeta = (selector, createTag, updater) => {
-  if (typeof document === 'undefined') return;
-  let element = document.head.querySelector(selector);
-  if (!element) {
-    element = document.createElement(createTag);
-    document.head.appendChild(element);
-  }
-  updater(element);
-};
+  const fallback = `${SITE_URL}/articulos/${slug}`;
+  if (!raw) return fallback;
 
+  if (raw.startsWith('/')) {
+    if (!/^\/articulos\/[^/?#]+/i.test(raw)) return fallback;
+    return `${SITE_ORIGIN}${raw}`;
+  }
+
+  try {
+    const parsed = new URL(raw);
+    // Avoid cross-domain canonicals caused by bad manual entries.
+    const isArticlePath = /^\/articulos\/[^/?#]+/i.test(parsed.pathname);
+    if (parsed.origin !== SITE_ORIGIN || !isArticlePath) return fallback;
+    return parsed.toString();
+  } catch {
+    return fallback;
+  }
+};
 const ArticleDetailPage = () => {
   const { slug } = useParams();
   const [article, setArticle] = useState(null);
@@ -66,6 +84,14 @@ const ArticleDetailPage = () => {
     () => resolveArticleImageUrl(article?.image_url || ''),
     [article?.image_url],
   );
+  const publishedDateLabel = useMemo(
+    () => formatArticleDate(article?.published_at || article?.created_at),
+    [article?.published_at, article?.created_at],
+  );
+  const updatedDateLabel = useMemo(
+    () => formatArticleDate(article?.updated_at || article?.published_at || article?.created_at),
+    [article?.updated_at, article?.published_at, article?.created_at],
+  );
   const seoTitle = useMemo(
     () => {
       if (article?.meta_title) return article.meta_title;
@@ -86,23 +112,6 @@ const ArticleDetailPage = () => {
     () => (article?.no_index ? 'noindex, nofollow' : 'index, follow'),
     [article?.no_index],
   );
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    document.title = seoTitle;
-    upsertHeadMeta('meta[name="description"]', 'meta', (element) => {
-      element.setAttribute('name', 'description');
-      element.setAttribute('content', seoDescription);
-    });
-    upsertHeadMeta('meta[name="robots"]', 'meta', (element) => {
-      element.setAttribute('name', 'robots');
-      element.setAttribute('content', robotsContent);
-    });
-    upsertHeadMeta('link[rel="canonical"]', 'link', (element) => {
-      element.setAttribute('rel', 'canonical');
-      element.setAttribute('href', canonicalUrl);
-    });
-  }, [seoTitle, seoDescription, robotsContent, canonicalUrl]);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -197,7 +206,7 @@ const ArticleDetailPage = () => {
             />
             <div className="text-left">
               <p className="font-bold text-foreground text-base">{authorPresentation.name}</p>
-              <p>{article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Fecha reciente'} • 5 min de lectura</p>
+              <p>Publicado: {publishedDateLabel} • Revisado: {updatedDateLabel} • 5 min de lectura</p>
             </div>
             </div>
           </div>
@@ -218,10 +227,6 @@ const ArticleDetailPage = () => {
           data-editor-format={contentDiagnostics.format}
           dangerouslySetInnerHTML={{ __html: safePublishedHtml }}
         />
-
-        <div className="bg-orange-500/10 border-l-4 border-orange-500 p-6 mt-12 mb-12 text-sm text-orange-700 dark:text-orange-400 rounded-r-xl">
-          ⚠️ <strong>Descargo médico:</strong> Este artículo es puramente educativo y no constituye consejo médico, diagnóstico ni tratamiento. Consulta siempre a tu médico u otro proveedor de salud calificado con cualquier pregunta que puedas tener sobre una condición médica.
-        </div>
 
         {/* Use the new comments section */}
         {!isLocalArticle ? <CommentsSection articleId={article.id} /> : null}

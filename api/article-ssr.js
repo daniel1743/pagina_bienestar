@@ -1,6 +1,13 @@
 import { getLocalPublishedArticleBySlug } from '../src/content/localPublishedArticles.js';
 
 const SITE_URL = String(process.env.SITE_URL || process.env.VITE_SITE_URL || 'https://bienestarenclaro.com').replace(/\/$/, '');
+const SITE_ORIGIN = (() => {
+  try {
+    return new URL(SITE_URL).origin;
+  } catch {
+    return 'https://bienestarenclaro.com';
+  }
+})();
 const SITE_NAME = 'Bienestar en Claro';
 const DEFAULT_SUPABASE_URL = 'https://kuacuriiueaxjzzgmqtu.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY =
@@ -44,11 +51,70 @@ const normalizePublicUrl = (value) => {
 };
 
 const canonicalFromArticle = (article, slug) => {
+  const fallback = `${SITE_URL}/articulos/${slug}`;
   const raw = String(article?.canonical_url || '').trim();
-  if (!raw) return `${SITE_URL}/articulos/${slug}`;
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-  if (raw.startsWith('/')) return `${SITE_URL}${raw}`;
-  return `https://${raw}`;
+  if (!raw) return fallback;
+
+  try {
+    const parsed = new URL(raw, SITE_ORIGIN);
+    const isArticlePath = /^\/articulos\/[^/?#]+/i.test(parsed.pathname);
+    if (!isArticlePath) return fallback;
+    return `${SITE_ORIGIN}${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return fallback;
+  }
+};
+const normalizeAuthorToken = (value = '') =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+const parseSchemaAuthors = (rawAuthor) => {
+  const text = String(rawAuthor || '').trim();
+  const tokens = text
+    ? text
+        .split(/[|,;/]+/)
+        .map((item) => normalizeAuthorToken(item))
+        .filter(Boolean)
+    : [];
+  const hasDaniel = tokens.some((token) => token.includes('daniel'));
+  const hasBrand = tokens.some((token) => token.includes('bienestar en claro'));
+  const authors = [];
+
+  if (hasDaniel) {
+    authors.push({
+      '@type': 'Person',
+      name: 'Daniel Falcón',
+      url: `${SITE_URL}/sobre-mi`,
+    });
+  }
+  if (hasBrand) {
+    authors.push({
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+    });
+  }
+  if (!authors.length && text) {
+    authors.push({
+      '@type': 'Person',
+      name: text,
+    });
+  }
+  if (!authors.length) {
+    authors.push({
+      '@type': 'Person',
+      name: 'Daniel Falcón',
+      url: `${SITE_URL}/sobre-mi`,
+    });
+    authors.push({
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+    });
+  }
+  return authors;
 };
 
 const stripExistingSeoTags = (html) =>
@@ -75,16 +141,17 @@ const seoTagsForArticle = (article, slug) => {
   const imageUrl = normalizePublicUrl(article?.image_url || '/branding/logo-horizontal.png');
   const publishedAt = article?.published_at || article?.created_at || new Date().toISOString();
   const updatedAt = article?.updated_at || article?.published_at || article?.created_at || new Date().toISOString();
-  const authorName = article?.author || SITE_NAME;
+  const schemaAuthors = parseSchemaAuthors(article?.author || '');
   const articleJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: String(article?.title || SITE_NAME).slice(0, 180),
     description,
     image: [imageUrl],
+    url: canonical,
     datePublished: new Date(publishedAt).toISOString(),
     dateModified: new Date(updatedAt).toISOString(),
-    author: { '@type': 'Person', name: authorName },
+    author: schemaAuthors.length === 1 ? schemaAuthors[0] : schemaAuthors,
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,

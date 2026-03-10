@@ -1,0 +1,759 @@
+{
+  "generated_at": "2026-03-06T20:20:37.362Z",
+  "site_url": "https://bienestarenclaro.com",
+  "total_articles": 10,
+  "graph_summary": {
+    "orphan_count": 2,
+    "weak_count": 3,
+    "orphan_ratio": 0.2,
+    "weak_ratio": 0.3,
+    "related_coverage_count": 10,
+    "related_coverage_ratio": 1,
+    "avg_outlinks": 2.7
+  },
+  "contracts": {
+    "internal_link_contract_sample": [
+      {
+        "source_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+        "suggestions": [
+          {
+            "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+            "anchor_text": "síntomas hígado graso",
+            "relevance_score": 152,
+            "reason": "same_category, token_overlap:139, authority:1, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 131,
+            "reason": "token_overlap:121, authority:6, recency:4"
+          },
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Sobre metabolismo",
+            "relevance_score": 122,
+            "reason": "same_category, token_overlap:106, authority:4, recency:4"
+          },
+          {
+            "target_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+            "anchor_text": "cortisol y metabolismo",
+            "relevance_score": 111,
+            "reason": "same_category, token_overlap:97, authority:2, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Sobre metabolismo",
+            "relevance_score": 111,
+            "reason": "same_category, token_overlap:94, authority:5, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+        "suggestions": [
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 174,
+            "reason": "token_overlap:164, authority:6, recency:4"
+          },
+          {
+            "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+            "anchor_text": "causas del hígado graso",
+            "relevance_score": 151,
+            "reason": "same_category, token_overlap:139, recency:4"
+          },
+          {
+            "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+            "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+            "relevance_score": 133,
+            "reason": "token_overlap:127, authority:2, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Sobre metabolismo",
+            "relevance_score": 113,
+            "reason": "same_category, token_overlap:96, authority:5, recency:4"
+          },
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 107,
+            "reason": "token_overlap:98, authority:5, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+        "suggestions": [
+          {
+            "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+            "anchor_text": "síntomas hígado graso",
+            "relevance_score": 105,
+            "reason": "token_overlap:100, authority:1, recency:4"
+          },
+          {
+            "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+            "anchor_text": "causas del hígado graso",
+            "relevance_score": 100,
+            "reason": "token_overlap:96, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 97,
+            "reason": "token_overlap:87, authority:6, recency:4"
+          },
+          {
+            "target_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+            "anchor_text": "cortisol y metabolismo",
+            "relevance_score": 95,
+            "reason": "token_overlap:89, authority:2, recency:4"
+          },
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 94,
+            "reason": "token_overlap:85, authority:5, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+        "suggestions": [
+          {
+            "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+            "anchor_text": "causas del hígado graso",
+            "relevance_score": 109,
+            "reason": "same_category, token_overlap:97, recency:4"
+          },
+          {
+            "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+            "anchor_text": "Sobre metabolismo",
+            "relevance_score": 105,
+            "reason": "same_category, token_overlap:89, authority:4, recency:4"
+          },
+          {
+            "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+            "anchor_text": "Sobre metabolismo",
+            "relevance_score": 99,
+            "reason": "same_category, token_overlap:82, authority:5, recency:4"
+          },
+          {
+            "target_slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+            "anchor_text": "eje intestino cerebro",
+            "relevance_score": 93,
+            "reason": "token_overlap:89, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+            "anchor_text": "síntomas hígado graso",
+            "relevance_score": 90,
+            "reason": "same_category, token_overlap:77, authority:1, recency:4"
+          }
+        ]
+      },
+      {
+        "source_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+        "suggestions": [
+          {
+            "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+            "anchor_text": "estreñimiento crónico",
+            "relevance_score": 99,
+            "reason": "same_category, token_overlap:82, authority:5, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+            "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+            "relevance_score": 96,
+            "reason": "token_overlap:86, authority:6, recency:4"
+          },
+          {
+            "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+            "anchor_text": "síntomas hígado graso",
+            "relevance_score": 82,
+            "reason": "token_overlap:77, authority:1, recency:4"
+          },
+          {
+            "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+            "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+            "relevance_score": 78,
+            "reason": "token_overlap:72, authority:2, recency:4"
+          },
+          {
+            "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+            "anchor_text": "causas del hígado graso",
+            "relevance_score": 61,
+            "reason": "token_overlap:57, recency:4"
+          }
+        ]
+      }
+    ],
+    "cluster_contract_sample": [
+      {
+        "cluster_id": "metabolismo-causas-del-higado-graso",
+        "pillar_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+        "topic": "causas-del-higado-graso",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "metabolismo-sintomas-higado-graso",
+        "pillar_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+        "topic": "sintomas-higado-graso",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "general-eje-intestino-cerebro",
+        "pillar_slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+        "topic": "eje-intestino-cerebro",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "metabolismo-cortisol-y-metabolismo",
+        "pillar_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+        "topic": "cortisol-y-metabolismo",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "digestion-helicobacter",
+        "pillar_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+        "topic": "helicobacter",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "higado-higado",
+        "pillar_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+        "topic": "higado",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "digestion-estrenimiento-cronico",
+        "pillar_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+        "topic": "estrenimiento-cronico",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "higado-cirrosis",
+        "pillar_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+        "topic": "cirrosis",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "metabolismo-obesidad",
+        "pillar_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+        "topic": "obesidad",
+        "intent": "informacional",
+        "supporting_slugs": []
+      },
+      {
+        "cluster_id": "metabolismo-resistencia",
+        "pillar_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+        "topic": "resistencia",
+        "intent": "informacional",
+        "supporting_slugs": []
+      }
+    ]
+  },
+  "rows": [
+    {
+      "slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+      "title": "Por qué aparece el hígado graso: la conexión entre metabolismo, insulina y estilo de vida",
+      "category": "Metabolismo",
+      "inlinks": 0,
+      "outlinks": 4,
+      "is_orphan": true,
+      "is_weak": true,
+      "related": [
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 152,
+          "reason": "same_category, token_overlap:139, authority:1, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 131,
+          "reason": "token_overlap:121, authority:6, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 122,
+          "reason": "same_category, token_overlap:106, authority:4, recency:4"
+        },
+        {
+          "target_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+          "anchor_text": "cortisol y metabolismo",
+          "relevance_score": 111,
+          "reason": "same_category, token_overlap:97, authority:2, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 111,
+          "reason": "same_category, token_overlap:94, authority:5, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+      "title": "Hígado graso: síntomas reales, señales tempranas y cuándo preocuparse",
+      "category": "Metabolismo",
+      "inlinks": 1,
+      "outlinks": 4,
+      "is_orphan": false,
+      "is_weak": true,
+      "related": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 174,
+          "reason": "token_overlap:164, authority:6, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 151,
+          "reason": "same_category, token_overlap:139, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 133,
+          "reason": "token_overlap:127, authority:2, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 113,
+          "reason": "same_category, token_overlap:96, authority:5, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 107,
+          "reason": "token_overlap:98, authority:5, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+      "title": "El segundo cerebro: cómo tu intestino influye en tu estado de ánimo",
+      "category": "General",
+      "inlinks": 0,
+      "outlinks": 0,
+      "is_orphan": true,
+      "is_weak": true,
+      "related": [
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 105,
+          "reason": "token_overlap:100, authority:1, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 100,
+          "reason": "token_overlap:96, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 97,
+          "reason": "token_overlap:87, authority:6, recency:4"
+        },
+        {
+          "target_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+          "anchor_text": "cortisol y metabolismo",
+          "relevance_score": 95,
+          "reason": "token_overlap:89, authority:2, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 94,
+          "reason": "token_overlap:85, authority:5, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+      "title": "Cortisol elevado: por qué el estrés crónico favorece la grasa abdominal y altera tu metabolismo",
+      "category": "Metabolismo",
+      "inlinks": 2,
+      "outlinks": 0,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 109,
+          "reason": "same_category, token_overlap:97, recency:4"
+        },
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 105,
+          "reason": "same_category, token_overlap:89, authority:4, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 99,
+          "reason": "same_category, token_overlap:82, authority:5, recency:4"
+        },
+        {
+          "target_slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+          "anchor_text": "eje intestino cerebro",
+          "relevance_score": 93,
+          "reason": "token_overlap:89, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 90,
+          "reason": "same_category, token_overlap:77, authority:1, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+      "title": "Helicobacter pylori: qué es, síntomas y tratamiento",
+      "category": "Digestión",
+      "inlinks": 2,
+      "outlinks": 2,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 99,
+          "reason": "same_category, token_overlap:82, authority:5, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 96,
+          "reason": "token_overlap:86, authority:6, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 82,
+          "reason": "token_overlap:77, authority:1, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+          "relevance_score": 78,
+          "reason": "token_overlap:72, authority:2, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 61,
+          "reason": "token_overlap:57, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "title": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+      "category": "Hígado",
+      "inlinks": 6,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 169,
+          "reason": "token_overlap:164, authority:1, recency:4"
+        },
+        {
+          "target_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+          "anchor_text": "Sobre hígado",
+          "relevance_score": 139,
+          "reason": "same_category, token_overlap:125, authority:2, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 125,
+          "reason": "token_overlap:121, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 118,
+          "reason": "token_overlap:109, authority:5, recency:4"
+        },
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+          "relevance_score": 97,
+          "reason": "token_overlap:88, authority:5, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "title": "Estreñimiento crónico: entender qué ocurre y cómo recuperar el tránsito intestinal",
+      "category": "Digestión",
+      "inlinks": 5,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 119,
+          "reason": "token_overlap:109, authority:6, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 103,
+          "reason": "token_overlap:98, authority:1, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Sobre digestión",
+          "relevance_score": 96,
+          "reason": "same_category, token_overlap:82, authority:2, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 91,
+          "reason": "token_overlap:87, recency:4"
+        },
+        {
+          "target_slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+          "anchor_text": "eje intestino cerebro",
+          "relevance_score": 89,
+          "reason": "token_overlap:85, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "title": "Cirrosis hepática: lo que realmente significa y cómo se vive con ella",
+      "category": "Hígado",
+      "inlinks": 2,
+      "outlinks": 5,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Sobre hígado",
+          "relevance_score": 143,
+          "reason": "same_category, token_overlap:125, authority:6, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 132,
+          "reason": "token_overlap:127, authority:1, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 98,
+          "reason": "token_overlap:94, recency:4"
+        },
+        {
+          "target_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+          "anchor_text": "estreñimiento crónico",
+          "relevance_score": 86,
+          "reason": "token_overlap:77, authority:5, recency:4"
+        },
+        {
+          "target_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+          "anchor_text": "Helicobacter pylori: qué es, síntomas y tratamiento",
+          "relevance_score": 78,
+          "reason": "token_overlap:72, authority:2, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+      "title": "Obesidad: la enfermedad metabólica que no empieza en la balanza",
+      "category": "Metabolismo",
+      "inlinks": 5,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 128,
+          "reason": "same_category, token_overlap:112, authority:4, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 109,
+          "reason": "same_category, token_overlap:96, authority:1, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 106,
+          "reason": "same_category, token_overlap:94, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 98,
+          "reason": "token_overlap:88, authority:6, recency:4"
+        },
+        {
+          "target_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+          "anchor_text": "cortisol y metabolismo",
+          "relevance_score": 96,
+          "reason": "same_category, token_overlap:82, authority:2, recency:4"
+        }
+      ]
+    },
+    {
+      "slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+      "title": "Resistencia a la insulina: la raíz del síndrome metabólico y cómo revertirla",
+      "category": "Metabolismo",
+      "inlinks": 4,
+      "outlinks": 3,
+      "is_orphan": false,
+      "is_weak": false,
+      "related": [
+        {
+          "target_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+          "anchor_text": "Sobre metabolismo",
+          "relevance_score": 129,
+          "reason": "same_category, token_overlap:112, authority:5, recency:4"
+        },
+        {
+          "target_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+          "anchor_text": "causas del hígado graso",
+          "relevance_score": 118,
+          "reason": "same_category, token_overlap:106, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+          "anchor_text": "síntomas hígado graso",
+          "relevance_score": 103,
+          "reason": "same_category, token_overlap:90, authority:1, recency:4"
+        },
+        {
+          "target_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+          "anchor_text": "cortisol y metabolismo",
+          "relevance_score": 103,
+          "reason": "same_category, token_overlap:89, authority:2, recency:4"
+        },
+        {
+          "target_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+          "anchor_text": "Hígado graso en Chile: qué significa tu diagnóstico y qué puedes hacer desde hoy",
+          "relevance_score": 97,
+          "reason": "token_overlap:87, authority:6, recency:4"
+        }
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "metabolismo-causas-del-higado-graso",
+      "topic": "causas-del-higado-graso",
+      "intent": "informacional",
+      "pillar_slug": "por-que-aparece-el-higado-graso-la-conexion-entre-metabolismo-insulina-y-estilo-de-vida",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "metabolismo-sintomas-higado-graso",
+      "topic": "sintomas-higado-graso",
+      "intent": "informacional",
+      "pillar_slug": "higado-graso-sintomas-reales-senales-tempranas-y-cuando-preocuparse",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "general-eje-intestino-cerebro",
+      "topic": "eje-intestino-cerebro",
+      "intent": "informacional",
+      "pillar_slug": "el-segundo-cerebro-como-tu-intestino-influye-en-tu-estado-de-animo",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "metabolismo-cortisol-y-metabolismo",
+      "topic": "cortisol-y-metabolismo",
+      "intent": "informacional",
+      "pillar_slug": "cortisol-elevado-por-que-el-estres-cronico-favorece-la-grasa-abdominal-y-altera-tu-metabolismo",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "digestion-helicobacter",
+      "topic": "helicobacter",
+      "intent": "informacional",
+      "pillar_slug": "helicobacterhelicobacter-pylori-que-es-sintomas-y-tratamiento",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "higado-higado",
+      "topic": "higado",
+      "intent": "informacional",
+      "pillar_slug": "higado-graso-en-chile-que-significa-tu-diagnostico-y-que-puedes-hacer-desde-hoy",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "digestion-estrenimiento-cronico",
+      "topic": "estrenimiento-cronico",
+      "intent": "informacional",
+      "pillar_slug": "estrenimiento-causas-habitos-y-cuando-consultar",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "higado-cirrosis",
+      "topic": "cirrosis",
+      "intent": "informacional",
+      "pillar_slug": "cirrosis-hepatica-que-es-senales-y-que-hacer-sin-panico",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "metabolismo-obesidad",
+      "topic": "obesidad",
+      "intent": "informacional",
+      "pillar_slug": "obesidad-la-enfermedad-metabolica-que-no-empieza-en-la-balanza",
+      "supporting_slugs": [],
+      "size": 1
+    },
+    {
+      "cluster_id": "metabolismo-resistencia",
+      "topic": "resistencia",
+      "intent": "informacional",
+      "pillar_slug": "resistencia-a-la-insulina-la-raiz-del-sindrome-metabolico-y-como-revertirla",
+      "supporting_slugs": [],
+      "size": 1
+    }
+  ]
+}

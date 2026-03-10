@@ -73,17 +73,21 @@ const IMAGE_QUALITY_START = 0.8;
 const IMAGE_QUALITY_MIN = 0.6;
 const MAX_META_TITLE_LEN = 60;
 const MAX_META_DESCRIPTION_LEN = 160;
+const AUTO_INTERNAL_LINKS_MIN = 3;
+const AUTO_INTERNAL_LINKS_MAX = 4;
+const AUTO_INTERNAL_LINKS_CLASS = 'auto-internal-links';
 const WEBP_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*\.webp$/;
 const AUTHOR_SIGNATURES = {
   brand: { key: 'brand', name: 'Bienestar en Claro', avatar: '/branding/monogram-bc-180.png' },
   daniel: { key: 'daniel', name: 'Daniel Falcón', avatar: '/images/DANIEL_FALCON.jpeg' },
 };
+const AUTHOR_STORAGE_SEPARATOR = ' | ';
 
 const emptyForm = {
   id: null, title: '', subtitle: '', slug: '', category: 'General', tags: '', status: 'draft',
-  scheduledAt: '', authorName: 'Bienestar en Claro', authorSignature: 'brand', authorBio: '', featuredImage: '', videoEmbed: '',
+  scheduledAt: '', authorName: 'Daniel Falcón', authorSignature: 'daniel', includeDanielInSchema: true, includeBrandInSchema: true, authorBio: '', featuredImage: '', videoEmbed: '',
   externalLinks: [''], metaTitle: '', metaDescription: '', focusKeyword: '', secondaryKeywords: '',
-  canonical: '', noIndex: false, content: '<p>Escribe tu contenido...</p>',
+  canonical: '', noIndex: false, content: '<p>Escribe tu contenido...</p>', publishedAt: '', updatedAt: '',
 };
 
 const slugify = (text) => (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').replace(/-+/g, '-');
@@ -97,6 +101,57 @@ const inferAuthorSignature = (authorName) => {
   const normalized = normalizeAuthorName(authorName);
   if (normalized.includes('daniel')) return 'daniel';
   return 'brand';
+};
+const parseAuthorSignaturesFromValue = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return [];
+  const tokens = raw
+    .split(/[|,;/]+/)
+    .map((token) => normalizeAuthorName(token))
+    .filter(Boolean);
+  const set = new Set();
+  tokens.forEach((token) => {
+    if (token.includes('daniel')) set.add('daniel');
+    if (token.includes('bienestar en claro')) set.add('brand');
+  });
+  return Array.from(set);
+};
+const serializeAuthorSignatures = (signatures = []) =>
+  signatures
+    .filter((signature) => AUTHOR_SIGNATURES[signature])
+    .map((signature) => AUTHOR_SIGNATURES[signature].name)
+    .join(AUTHOR_STORAGE_SEPARATOR);
+const resolveAuthorUiConfig = (rawAuthor, options = {}) => {
+  const parsedSignatures = parseAuthorSignaturesFromValue(rawAuthor);
+  const includeDanielInSchema =
+    typeof options.includeDanielInSchema === 'boolean'
+      ? options.includeDanielInSchema
+      : parsedSignatures.length
+        ? parsedSignatures.includes('daniel')
+        : true;
+  const includeBrandInSchema =
+    typeof options.includeBrandInSchema === 'boolean'
+      ? options.includeBrandInSchema
+      : parsedSignatures.length
+        ? parsedSignatures.includes('brand')
+        : true;
+
+  let authorSignature =
+    options.authorSignature && AUTHOR_SIGNATURES[options.authorSignature]
+      ? options.authorSignature
+      : inferAuthorSignature(rawAuthor || '');
+  if (authorSignature === 'daniel' && !includeDanielInSchema && includeBrandInSchema) authorSignature = 'brand';
+  if (authorSignature === 'brand' && !includeBrandInSchema && includeDanielInSchema) authorSignature = 'daniel';
+  if (!includeDanielInSchema && !includeBrandInSchema) authorSignature = options.authorSignature || 'daniel';
+
+  const authorName = AUTHOR_SIGNATURES[authorSignature]?.name || 'Daniel Falcón';
+  return { includeDanielInSchema, includeBrandInSchema, authorSignature, authorName };
+};
+const formatAdminDateLabel = (value) => {
+  if (!value) return 'Se define al publicar';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' });
 };
 const normalizeStatus = (value) => (['published', 'publicado'].includes((value || '').toLowerCase()) ? 'published' : ['scheduled', 'programado'].includes((value || '').toLowerCase()) ? 'scheduled' : ['review', 'en_revision', 'revision'].includes((value || '').toLowerCase()) ? 'review' : 'draft');
 const safeRead = (key, fallback) => { try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) ?? fallback : fallback; } catch { return fallback; } };
@@ -228,15 +283,26 @@ const normalizeLinkValue = (raw) => {
   }
   return `https://${value}`;
 };
-const normalizeCanonicalUrl = (raw) => {
+const normalizeCanonicalUrl = (raw, slug) => {
   const value = String(raw || '').trim();
-  if (!value) return null;
-  if (value.startsWith('http://') || value.startsWith('https://')) return value;
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bienestarenclaro.com';
+  const articlePath = slug ? `/articulos/${slugify(slug)}` : '';
+  if (!value) return articlePath ? `${origin}${articlePath}` : null;
+
   if (value.startsWith('/')) {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bienestarenclaro.com';
-    return `${origin}${value}`;
+    const canonicalPath = /^\/articulos\/[^/?#]+/i.test(value) ? value : articlePath;
+    return canonicalPath ? `${origin}${canonicalPath}` : null;
   }
-  return `https://${value}`;
+
+  try {
+    const parsed = new URL(value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`);
+    const canonicalPath = /^\/articulos\/[^/?#]+/i.test(parsed.pathname) ? parsed.pathname : articlePath;
+    if (!canonicalPath) return null;
+    // Force same-site canonical to prevent accidental wrong TLD/domain values.
+    return `${origin}${canonicalPath}${parsed.search}${parsed.hash}`;
+  } catch {
+    return articlePath ? `${origin}${articlePath}` : null;
+  }
 };
 const isInternalUrl = (url) =>
   url.startsWith('/') || url.startsWith('#') || url.startsWith('./') || url.startsWith('../');
@@ -354,6 +420,86 @@ const executeArticlesMutationWithFallback = async ({ payload, mutate }) => {
   return { data: null, error: lastError, payload: candidatePayload, removedColumns };
 };
 const articleInternalUrl = (slug) => `/articulos/${slug}`;
+const parseArticleSlugFromHref = (href) => {
+  const raw = String(href || '').trim();
+  if (!raw) return '';
+  const getSlugFromPath = (pathname) => {
+    const match = String(pathname || '').match(/^\/articulos\/([^/?#]+)/i);
+    return match?.[1] ? decodeURIComponent(match[1]) : '';
+  };
+
+  if (raw.startsWith('/')) return getSlugFromPath(raw);
+  if (raw.startsWith('http://') || raw.startsWith('https://')) {
+    try {
+      const parsed = new URL(raw);
+      return getSlugFromPath(parsed.pathname);
+    } catch {
+      return '';
+    }
+  }
+  return '';
+};
+const applyAutomaticInternalLinks = (html, suggestions = []) => {
+  const normalized = sanitizeEditorialHtml(html || '<p></p>');
+  if (typeof DOMParser === 'undefined' || typeof document === 'undefined') {
+    return { content: normalized, linksAdded: 0 };
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<body>${normalized}</body>`, 'text/html');
+  const body = doc.body;
+
+  Array.from(body.querySelectorAll(`section.${AUTO_INTERNAL_LINKS_CLASS}`)).forEach((node) =>
+    node.remove(),
+  );
+
+  const existingTargets = new Set(
+    Array.from(body.querySelectorAll('a[href]'))
+      .map((link) => parseArticleSlugFromHref(link.getAttribute('href')))
+      .filter(Boolean),
+  );
+
+  const picked = [];
+  const pickedTargets = new Set();
+
+  for (const suggestion of suggestions) {
+    if (picked.length >= AUTO_INTERNAL_LINKS_MAX) break;
+    const targetSlug = String(suggestion?.slug || '').trim();
+    if (!targetSlug || existingTargets.has(targetSlug) || pickedTargets.has(targetSlug)) continue;
+    const anchorText = String(suggestion?.title || targetSlug).trim();
+    if (!anchorText) continue;
+    picked.push({ targetSlug, anchorText });
+    pickedTargets.add(targetSlug);
+  }
+
+  if (!picked.length) {
+    return { content: sanitizeEditorialHtml(body.innerHTML.trim() || '<p></p>'), linksAdded: 0 };
+  }
+
+  const section = doc.createElement('section');
+  section.setAttribute('class', AUTO_INTERNAL_LINKS_CLASS);
+  const title = doc.createElement('h2');
+  title.textContent = 'Lecturas relacionadas';
+  section.appendChild(title);
+
+  const list = doc.createElement('ul');
+  picked.forEach((item) => {
+    const li = doc.createElement('li');
+    const link = doc.createElement('a');
+    link.setAttribute('href', `/articulos/${encodeURIComponent(item.targetSlug)}`);
+    link.textContent = item.anchorText;
+    li.appendChild(link);
+    list.appendChild(li);
+  });
+  section.appendChild(list);
+  body.appendChild(section);
+
+  const linksAdded = picked.length >= AUTO_INTERNAL_LINKS_MIN ? picked.length : picked.length;
+  return {
+    content: sanitizeEditorialHtml(body.innerHTML.trim() || '<p></p>'),
+    linksAdded,
+  };
+};
 const canvasToWebpBlob = (canvas, quality) =>
   new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -507,7 +653,11 @@ const ArticleManagementModule = () => {
     const remote = (rows || []).map((a) => {
       const normalizedSlug = slugify(a.slug || '');
       const m = stripSeoMetaFields(meta[String(a.id)] || (normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {});
-      const authorName = m.authorName || a.author || 'Bienestar en Claro';
+      const authorConfig = resolveAuthorUiConfig(m.authorName || a.author || '', {
+        authorSignature: m.authorSignature,
+        includeDanielInSchema: m.includeDanielInSchema,
+        includeBrandInSchema: m.includeBrandInSchema,
+      });
       return {
         ...emptyForm,
         ...m,
@@ -517,8 +667,10 @@ const ArticleManagementModule = () => {
         slug: a.slug || '',
         category: m.category ?? a.category ?? 'General',
         status: normalizeStatus(m.status || a.status),
-        authorName,
-        authorSignature: m.authorSignature || inferAuthorSignature(authorName),
+        authorName: authorConfig.authorName,
+        authorSignature: authorConfig.authorSignature,
+        includeDanielInSchema: authorConfig.includeDanielInSchema,
+        includeBrandInSchema: authorConfig.includeBrandInSchema,
         featuredImage: resolveArticleImageUrl(a.image_url || m.featuredImage || ''),
         content: sanitizeEditorialHtml(m.content || a.content || '<p>Sin contenido</p>'),
         metaTitle: a.meta_title || '',
@@ -527,13 +679,19 @@ const ArticleManagementModule = () => {
         noIndex: Boolean(a.no_index),
         focusKeyword: a.focus_keyword || '',
         secondaryKeywords: a.secondary_keywords || '',
+        publishedAt: a.published_at || '',
+        updatedAt: a.updated_at || '',
       };
     });
     const dbSlugs = new Set(remote.map((a) => a.slug));
     const local = LOCAL_PUBLISHED_ARTICLES.filter((a) => !dbSlugs.has(a.slug)).map((a) => {
-      const authorName = a.author || 'Bienestar en Claro';
       const normalizedSlug = slugify(a.slug || '');
       const m = stripSeoMetaFields((normalizedSlug ? meta[`slug:${normalizedSlug}`] : null) || {});
+      const authorConfig = resolveAuthorUiConfig(m.authorName || a.author || '', {
+        authorSignature: m.authorSignature,
+        includeDanielInSchema: m.includeDanielInSchema,
+        includeBrandInSchema: m.includeBrandInSchema,
+      });
       return {
         ...emptyForm,
         ...m,
@@ -543,11 +701,15 @@ const ArticleManagementModule = () => {
         slug: a.slug,
         category: a.category || 'General',
         status: 'published',
-        authorName,
-        authorSignature: inferAuthorSignature(authorName),
+        authorName: authorConfig.authorName,
+        authorSignature: authorConfig.authorSignature,
+        includeDanielInSchema: authorConfig.includeDanielInSchema,
+        includeBrandInSchema: authorConfig.includeBrandInSchema,
         featuredImage: resolveArticleImageUrl(a.image_url || ''),
         content: sanitizeEditorialHtml(a.content || '<p>Sin contenido</p>'),
         localOnly: true,
+        publishedAt: a.published_at || a.created_at || '',
+        updatedAt: a.updated_at || a.published_at || a.created_at || '',
       };
     });
     setArticles([...local, ...remote]);
@@ -696,7 +858,7 @@ const ArticleManagementModule = () => {
 
   const buildRemoteDraft = (row) => {
     if (!row) return null;
-    const authorName = row.author || 'Bienestar en Claro';
+    const authorConfig = resolveAuthorUiConfig(row.author || '', {});
     return {
       ...emptyForm,
       id: row.id,
@@ -705,8 +867,10 @@ const ArticleManagementModule = () => {
       slug: row.slug || '',
       category: row.category || 'General',
       status: normalizeStatus(row.status),
-      authorName,
-      authorSignature: inferAuthorSignature(authorName),
+      authorName: authorConfig.authorName,
+      authorSignature: authorConfig.authorSignature,
+      includeDanielInSchema: authorConfig.includeDanielInSchema,
+      includeBrandInSchema: authorConfig.includeBrandInSchema,
       featuredImage: resolveArticleImageUrl(row.image_url || ''),
       content: sanitizeEditorialHtml(row.content || '<p>Sin contenido</p>'),
       metaTitle: row.meta_title || '',
@@ -715,6 +879,8 @@ const ArticleManagementModule = () => {
       noIndex: Boolean(row.no_index),
       focusKeyword: row.focus_keyword || '',
       secondaryKeywords: row.secondary_keywords || '',
+      publishedAt: row.published_at || '',
+      updatedAt: row.updated_at || '',
     };
   };
 
@@ -799,9 +965,26 @@ const ArticleManagementModule = () => {
     const raw = editor?.getHTML() || workingForm.content;
     const normalizedRaw = replaceH1WithH2(raw);
     let content = sanitizeEditorialHtml(normalizedRaw);
-    const resolvedSignature = AUTHOR_SIGNATURES[workingForm.authorSignature] ? workingForm.authorSignature : inferAuthorSignature(workingForm.authorName);
+    let autoLinksAdded = 0;
+    const requestedSignatures = [
+      workingForm.includeDanielInSchema ? 'daniel' : null,
+      workingForm.includeBrandInSchema ? 'brand' : null,
+    ].filter(Boolean);
+    if (!requestedSignatures.length) {
+      toast({
+        title: 'Autor schema requerido',
+        description: 'Activa al menos un autor para schema (Daniel o Bienestar en Claro).',
+        variant: 'destructive',
+      });
+      return null;
+    }
+    let resolvedSignature = AUTHOR_SIGNATURES[workingForm.authorSignature]
+      ? workingForm.authorSignature
+      : inferAuthorSignature(workingForm.authorName);
+    if (!requestedSignatures.includes(resolvedSignature)) resolvedSignature = requestedSignatures[0];
     const resolvedAuthorName =
-      AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Bienestar en Claro';
+      AUTHOR_SIGNATURES[resolvedSignature]?.name || workingForm.authorName || 'Daniel Falcón';
+    const serializedAuthorCredits = serializeAuthorSignatures(requestedSignatures);
     if (/<h1[\s>]/i.test(raw)) toast({ title: 'H1 ajustado', description: 'En el cuerpo se reemplazó H1 por H2 automáticamente.' });
     if (/<h1[\s>]/i.test(content)) {
       toast({
@@ -814,7 +997,7 @@ const ArticleManagementModule = () => {
     let safeFeaturedImage = resolveArticleImageUrl(workingForm.featuredImage || '');
     let migratedFeatured = false;
     let migratedInline = 0;
-    const canonicalUrl = normalizeCanonicalUrl(workingForm.canonical);
+    const canonicalUrl = normalizeCanonicalUrl(workingForm.canonical, slug);
     if (workingForm.featuredImage && !safeFeaturedImage) {
       toast({
         title: 'Imagen destacada temporal detectada',
@@ -857,6 +1040,11 @@ const ArticleManagementModule = () => {
         description: `Se migraron ${migratedFeatured ? 1 : 0} destacada(s) y ${migratedInline} interna(s) a Storage.`,
       });
     }
+    if (workingForm.status === 'published') {
+      const autoLinked = applyAutomaticInternalLinks(content, internalLinkSuggestions);
+      content = autoLinked.content;
+      autoLinksAdded = autoLinked.linksAdded;
+    }
     const payload = {
       title: workingForm.title,
       slug,
@@ -864,7 +1052,7 @@ const ArticleManagementModule = () => {
       content,
       category: workingForm.category,
       image_url: safeFeaturedImage || null,
-      author: resolvedAuthorName,
+      author: serializedAuthorCredits || resolvedAuthorName,
       status: workingForm.status,
       meta_title: safeMetaTitle || null,
       meta_description: safeMetaDescription || null,
@@ -872,9 +1060,12 @@ const ArticleManagementModule = () => {
       no_index: Boolean(workingForm.noIndex),
       focus_keyword: workingForm.focusKeyword?.trim() || null,
       secondary_keywords: workingForm.secondaryKeywords?.trim() || null,
+      updated_at: new Date().toISOString(),
       published_at:
         workingForm.status === 'published'
-          ? new Date().toISOString()
+          ? (workingForm.publishedAt
+              ? new Date(workingForm.publishedAt).toISOString()
+              : new Date().toISOString())
           : workingForm.scheduledAt
             ? new Date(workingForm.scheduledAt).toISOString()
             : null,
@@ -951,10 +1142,20 @@ const ArticleManagementModule = () => {
       secondaryKeywords: payload.secondary_keywords || '',
       authorSignature: resolvedSignature,
       authorName: resolvedAuthorName,
+      includeDanielInSchema: requestedSignatures.includes('daniel'),
+      includeBrandInSchema: requestedSignatures.includes('brand'),
+      publishedAt: payload.published_at || workingForm.publishedAt || '',
+      updatedAt: payload.updated_at || new Date().toISOString(),
       localOnly: String(id).startsWith('local-'),
     };
     persistMeta(id, next); logAdminAction('Artículo guardado', { id, title: workingForm.title }); toast({ title: workingForm.status === 'published' ? 'Artículo publicado' : 'Artículo guardado' });
     if (savedRemotely && workingForm.status === 'published') {
+      if (autoLinksAdded > 0) {
+        toast({
+          title: 'Enlaces internos automáticos',
+          description: `Se agregaron ${autoLinksAdded} enlaces relacionados al publicar.`,
+        });
+      }
       try {
         const r = await refreshSitemapAfterPublish();
         if (r.mode === 'dynamic') {
@@ -1480,8 +1681,10 @@ const ArticleManagementModule = () => {
               <div><Label>Categoría</Label><select value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100">{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></div>
               <div><Label>Estado</Label><select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))} className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100">{STATUS.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
               <div><Label>Fecha programada</Label><Input type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm((p) => ({ ...p, scheduledAt: e.target.value }))} /></div>
+              <div><Label>Publicado (visible)</Label><Input value={formatAdminDateLabel(form.publishedAt)} readOnly /></div>
+              <div className="md:col-span-2"><Label>Última revisión (visible)</Label><Input value={formatAdminDateLabel(form.updatedAt)} readOnly /></div>
               <div className="space-y-2">
-                <Label>Firma editorial</Label>
+                <Label>Autor visible</Label>
                 <select
                   value={form.authorSignature || inferAuthorSignature(form.authorName)}
                   onChange={(e) => {
@@ -1495,18 +1698,54 @@ const ArticleManagementModule = () => {
                   }}
                   className="h-10 w-full rounded-lg border border-slate-600 bg-slate-700/50 px-3 text-sm text-slate-100"
                 >
-                  <option value="brand">Bienestar en Claro (logo)</option>
                   <option value="daniel">Daniel Falcón (foto)</option>
+                  <option value="brand">Bienestar en Claro (logo)</option>
                 </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/50 px-2.5 py-2 text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.includeDanielInSchema)}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          includeDanielInSchema: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 accent-emerald-500"
+                    />
+                    Schema autor Daniel
+                  </label>
+                  <label className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/50 px-2.5 py-2 text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.includeBrandInSchema)}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          includeBrandInSchema: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 accent-emerald-500"
+                    />
+                    Schema autor Bienestar
+                  </label>
+                </div>
                 <div className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/50 px-2.5 py-2">
                   <img
                     src={(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).avatar}
                     alt={(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).name}
                     className="h-8 w-8 rounded-full object-cover border border-slate-600"
                   />
-                  <p className="text-xs text-slate-300">
-                    Se mostrará como: <span className="font-semibold">{(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).name}</span>
-                  </p>
+                  <div className="text-xs text-slate-300 space-y-1">
+                    <p>
+                      Se mostrará como:{' '}
+                      <span className="font-semibold">
+                        {(AUTHOR_SIGNATURES[form.authorSignature || inferAuthorSignature(form.authorName)] || AUTHOR_SIGNATURES.brand).name}
+                      </span>
+                    </p>
+                    <p>Publisher fijo: <span className="font-semibold">Bienestar en Claro</span> (logo institucional)</p>
+                  </div>
                 </div>
               </div>
               <div><Label>Meta title ({form.metaTitle.length}/60)</Label><Input value={form.metaTitle} onChange={(e) => setForm((p) => ({ ...p, metaTitle: e.target.value }))} className={form.metaTitle.length > 60 ? 'border-amber-400' : ''} /></div>
